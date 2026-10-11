@@ -9,11 +9,3 @@ local.properties
 /test/
 tools/.cache/
 __pycache__/
-
-# AI agent session caches and logs
-.claude/
-.codex/
-.grok/
-.gemini/
-.antigravity/
-*.log
