@@ -11,6 +11,7 @@ tools/.cache/
 __pycache__/
 
 # AI coding agents and builders (never committed)
+.ai-workflow/
 # Instruction and context files
 AGENTS.md
 CLAUDE.md
