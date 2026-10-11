@@ -1711,7 +1711,7 @@ function shuffle(list) {
 
 function startQuiz(mode, opt, timer, items) {
   if (!items.length) return;
-  Object.assign(quiz, { mode, opt, timer, deck: shuffle(items.slice()), i: 0, results: new Map() });
+  Object.assign(quiz, { mode, opt, timer, deck: shuffle(items.slice()), i: 0, results: new Map(), lang: state.lang });
   $('qTitle').textContent = mode === 'cards' ? 'Flash cards' : 'Written quiz';
   $('home').hidden = true;
   $('quizView').hidden = false;
@@ -1720,6 +1720,8 @@ function startQuiz(mode, opt, timer, items) {
 
 function closeQuiz() {
   stopQuizItem();
+  // Back to the language that was chosen (each card used its own word's language).
+  if (quiz.lang) state.lang = quiz.lang;
   $('quizView').hidden = true;
   $('home').hidden = false;
   renderQuizCard();
@@ -1782,6 +1784,9 @@ async function showQuizItem() {
   const run = quiz.run;
   if (quiz.i >= quiz.deck.length) return showQuizSummary();
   const item = quiz.deck[quiz.i];
+  // Each word is read, spoken, explained and written in the language it was practised in (the quiz mixes languages).
+  state.lang = quiz.lang; // so a word practised in the chosen language stays in it
+  state.lang = entryLang(historyAll()[item] || { text: item });
   $('qProgress').textContent = `${quiz.i + 1} / ${quiz.deck.length}`;
   $('qSummary').hidden = true;
   document.querySelector('.q-side').hidden = false;
