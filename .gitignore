@@ -9,3 +9,27 @@ local.properties
 /test/
 tools/.cache/
 __pycache__/
+
+# AI coding agents and builders (never committed)
+# Instruction and context files
+AGENTS.md
+CLAUDE.md
+GEMINI.md
+HANDOFF.md
+DECISIONS.md
+*.local.md
+.cursorrules
+.windsurfrules
+.clinerules
+.aider*
+.github/copilot-instructions.md
+# Caches, settings and session state
+.claude/
+.codex/
+.grok/
+.gemini/
+.antigravity/
+.agents/
+.cursor/
+.windsurf/
+.continue/
