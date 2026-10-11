@@ -5,6 +5,9 @@
   tools/play_upload.py upload build/release/Hok6-1.14.aab --track internal --name 1.14 --notes notes.txt
   tools/play_upload.py upload build/release/Hok6-1.14.aab --track alpha --name 1.14 --notes "• Fixes"
   tools/play_upload.py release 16 --track alpha --name 1.14 --notes notes.txt  # a version already uploaded, on a track
+  tools/play_upload.py listing                                   # show the store listing and its images
+  tools/play_upload.py listing --title T --short S --full FILE   # change the store listing text (en-US)
+  tools/play_upload.py images phoneScreenshots a.png b.png …     # replace that kind of image with these files
 
 Tracks: internal (Internal testing), alpha (the default Closed testing track), beta, production, or a closed track's
 own name. --notes takes a file or the text itself (en-US, at most 500 characters).
@@ -121,6 +124,71 @@ def release(api, code, track, name, notes, status):
     run_edit(api, status, lambda edit_id: put_on_track(api, edit_id, str(code), track, name, notes, status))
 
 
+LANGUAGE = "en-US"
+IMAGE_TYPES = ["phoneScreenshots", "sevenInchScreenshots", "tenInchScreenshots", "featureGraphic", "icon",
+               "tvScreenshots", "wearScreenshots", "chromeBookScreenshots"]
+
+
+def commit(api, edit_id):
+    try:
+        api.edits().commit(packageName=PACKAGE, editId=edit_id).execute()
+    except HttpError as e:
+        if "changesNotSentForReview" not in explain(e):
+            raise
+        api.edits().commit(packageName=PACKAGE, editId=edit_id, changesNotSentForReview=True).execute()
+        print("note: Play wants these changes sent for review from Play Console → Publishing overview")
+
+
+def listing(api, title, short, full, video):
+    """Shows the en-US store listing (and how many images of each kind), or changes the parts given."""
+    if full and os.path.exists(full):
+        full = open(full, encoding="utf-8").read().strip()
+    limits = {"title": (title, 30), "shortDescription": (short, 80), "fullDescription": (full, 4000)}
+    for field, (text, limit) in limits.items():
+        if text and len(text) > limit:
+            sys.exit(f"{field} is {len(text)} characters; Play allows {limit}")
+    changes = {f: t for f, (t, _) in limits.items() if t}
+    if video is not None:
+        changes["video"] = video
+
+    def work(edit_id):
+        listings = api.edits().listings()
+        if not changes:
+            current = listings.get(packageName=PACKAGE, editId=edit_id, language=LANGUAGE).execute()
+            for field in ("title", "shortDescription", "video"):
+                print(f"{field}: {current.get(field, '')}")
+            print("fullDescription:\n" + current.get("fullDescription", ""))
+            for kind in IMAGE_TYPES[:5]:
+                found = api.edits().images().list(packageName=PACKAGE, editId=edit_id, language=LANGUAGE,
+                                                  imageType=kind).execute().get("images", [])
+                print(f"{kind}: {len(found)}")
+            api.edits().delete(packageName=PACKAGE, editId=edit_id).execute()
+            return
+        listings.patch(packageName=PACKAGE, editId=edit_id, language=LANGUAGE, body=changes).execute()
+        commit(api, edit_id)
+        print("listing updated: " + ", ".join(changes))
+    run_edit(api, "completed", work)
+
+
+def images(api, kind, files):
+    """Replaces all the listing's images of one kind with [files], in that order."""
+    for f in files:
+        if not os.path.exists(f):
+            sys.exit(f"{f} not found")
+
+    def work(edit_id):
+        imgs = api.edits().images()
+        imgs.deleteall(packageName=PACKAGE, editId=edit_id, language=LANGUAGE, imageType=kind).execute()
+        for f in files:
+            mime = "image/png" if f.lower().endswith(".png") else "image/jpeg"
+            imgs.upload(packageName=PACKAGE, editId=edit_id, language=LANGUAGE, imageType=kind,
+                        media_body=MediaFileUpload(f, mimetype=mime)).execute()
+            print(f"uploaded {os.path.basename(f)}")
+        commit(api, edit_id)
+        print(f"{kind}: {len(files)} image(s)")
+    run_edit(api, "completed", work)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--key", default=os.environ.get("HOK6_PLAY_KEY", DEFAULT_KEY), help="service account JSON key")
@@ -140,11 +208,23 @@ def main():
         p.add_argument("--name", help="release name (default: the version code)")
         p.add_argument("--notes", help="release notes: a file, or the text")
         p.add_argument("--status", default="completed", choices=["completed", "draft"])
+    lst = sub.add_parser("listing", help="show the store listing, or change its text")
+    lst.add_argument("--title")
+    lst.add_argument("--short", help="short description (80 characters)")
+    lst.add_argument("--full", help="full description: a file, or the text (4000 characters)")
+    lst.add_argument("--video", help="YouTube URL ('' removes it)")
+    img = sub.add_parser("images", help="replace the listing's images of one kind")
+    img.add_argument("kind", choices=IMAGE_TYPES)
+    img.add_argument("files", nargs="+")
     args = parser.parse_args()
     api = service(args.key)
     try:
         if args.command == "check":
             check(api)
+        elif args.command == "listing":
+            listing(api, args.title, args.short, args.full, args.video)
+        elif args.command == "images":
+            images(api, args.kind, args.files)
         elif args.command == "release":
             release(api, args.version_code, args.track, args.name, args.notes, args.status)
         else:
