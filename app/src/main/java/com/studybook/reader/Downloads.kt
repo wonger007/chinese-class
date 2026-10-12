@@ -11,6 +11,7 @@ import android.view.Gravity
 import android.view.View
 import android.widget.CheckBox
 import android.widget.LinearLayout
+import android.widget.RadioGroup
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -148,6 +149,7 @@ object Downloads {
     })
     private const val KEY_LANGS = "langs"
     private const val KEY_YUE_SIMPLIFIED = "yueSimplified"
+    private const val KEY_YUE_STROKE_ORDER = "yueStrokeOrder"
     private const val KEY_LANG = "lang"
     private const val KEY_SETUP_DONE = "setup_done"
     private const val KEY_NO_REMIND = "no_download_reminders"
@@ -189,6 +191,12 @@ object Downloads {
     fun yueSimplified(context: Context) = TrainingStore(context).get(KEY_YUE_SIMPLIFIED) == "true"
 
     fun setYueSimplified(context: Context, on: Boolean) = TrainingStore(context).set(KEY_YUE_SIMPLIFIED, on.toString())
+
+    /** Cantonese stroke order: Hong Kong's ("hk", the default, where Hok6 has it) or mainland China's ("mainland"). */
+    fun yueHkStrokeOrder(context: Context) = TrainingStore(context).get(KEY_YUE_STROKE_ORDER)?.trim('"') != "mainland"
+
+    fun setYueHkStrokeOrder(context: Context, hk: Boolean) =
+        TrainingStore(context).set(KEY_YUE_STROKE_ORDER, if (hk) "\"hk\"" else "\"mainland\"")
 
     fun setLanguages(context: Context, langs: List<String>) =
         TrainingStore(context).set(KEY_LANGS, JSONArray(LANGS.filter { it in langs }).toString())
@@ -264,12 +272,17 @@ fun bindLanguageChoice(box: View, onChange: () -> Unit) {
     // Cantonese in simplified characters too: under Cantonese, only while it's ticked.
     val simplified = box.findViewById<CheckBox>(R.id.lang_yue_simplified)
     simplified.isChecked = Downloads.yueSimplified(context)
-    simplified.isVisible = boxes.getValue("yue").isChecked
     simplified.setOnCheckedChangeListener { _, on -> Downloads.setYueSimplified(context, on) }
+    // Cantonese stroke order: Hong Kong's or mainland China's, also only while Cantonese is ticked.
+    val order = box.findViewById<RadioGroup>(R.id.lang_yue_order)
+    order.check(if (Downloads.yueHkStrokeOrder(context)) R.id.lang_yue_order_hk else R.id.lang_yue_order_mainland)
+    order.setOnCheckedChangeListener { _, id -> Downloads.setYueHkStrokeOrder(context, id == R.id.lang_yue_order_hk) }
+    fun showYueOptions() = boxes.getValue("yue").isChecked.let { simplified.isVisible = it; order.isVisible = it }
+    showYueOptions()
     boxes.values.forEach { b ->
         b.setOnCheckedChangeListener { _, _ ->
             lockLast()
-            simplified.isVisible = boxes.getValue("yue").isChecked
+            showYueOptions()
             Downloads.setLanguages(context, boxes.filterValues { it.isChecked }.keys.toList())
             onChange()
         }

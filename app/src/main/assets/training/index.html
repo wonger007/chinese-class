@@ -33,6 +33,14 @@
         <label><input type="radio" name="inputMode" value="type" checked><span>⌨ Type</span></label>
         <label><input type="radio" name="inputMode" value="draw"><span>✍ Draw</span></label>
       </div>
+      <!-- Cantonese only: Hong Kong's or mainland China's stroke order (the same setting as Settings → Stroke order). -->
+      <div id="yueOrderRow" class="yue-order-row" hidden>
+        <span class="muted">Stroke order:</span>
+        <div class="input-mode" role="radiogroup" aria-label="Cantonese stroke order">
+          <label><input type="radio" name="yueOrder" value="hk"><span>Hong Kong</span></label>
+          <label><input type="radio" name="yueOrder" value="mainland"><span>Mainland China</span></label>
+        </div>
+      </div>
       <div id="typeArea">
       <label class="field"><span><span class="langName">Cantonese</span> characters or words, or English, to practice</span>
         <textarea id="fChars" rows="3" placeholder="e.g. 你好 謝謝 唔該 — or type English: thank you, good morning"></textarea>

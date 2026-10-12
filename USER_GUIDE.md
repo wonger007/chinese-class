@@ -129,9 +129,10 @@ and pinyin/jyutping above characters. Zooming doesn't re-wrap the lines, so trac
   have is left out (the message says how many), and switching back brings it back. Stroke order only ever comes from
   the language's own data, never another language's: Korean has stroke order for hangul and for the hanja learned
   first, so most other hanja (and a few rare characters in other languages) are shown without it, and the worksheet
-  says so. Cantonese and Mandarin stroke order follows mainland China's standard; Hong Kong's differs for some
-  characters (no openly licensed Hong Kong stroke data exists), so Cantonese worksheets say so: follow your textbook
-  or teacher where they disagree.
+  says so. For Cantonese, **Stroke order: Hong Kong / Mainland China** on the **✏️ Practice writing** tab (also in
+  ⋮ → **Settings** → **Languages**) chooses whose order to follow. **Hong Kong** (the default) uses Hong Kong's order
+  for the characters Hok6 has it for, and mainland China's for the rest; the worksheet says which. Mandarin always
+  follows mainland China's order, its own standard. Follow your textbook or teacher where they disagree.
 
 On a phone, worksheets show one character at a time with big squares.
 
@@ -173,7 +174,8 @@ Main screen ⋮ → **Settings**:
 - **Languages**: tick the languages you're learning (Cantonese, Mandarin, Japanese, Korean, one or more; the welcome screen asks the
   first time). Hok6 gets the handwriting recognition and voice for each one ticked. Cantonese is written in traditional
   characters, so simplified ones (学, 谢) are left out of it; tick **Simplified characters too** under Cantonese to
-  let them in.
+  let them in. **Stroke order** under Cantonese is the same Hong Kong / Mainland China choice as on the Practice
+  writing tab.
 - **Downloads**: the handwriting models and voices for those languages, with **Download all**. Needed once, with
   internet; after that Hok6 works offline.
 - **Voices**: which engine Hok6 speaks with: Google's (recommended; it has voices for all four) or the device's

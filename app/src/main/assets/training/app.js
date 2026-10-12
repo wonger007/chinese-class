@@ -168,14 +168,44 @@ function fetchRaw(ch, set = 'zh') {
    Korean data (only the hanja learned first). A character without it has no stroke order (strokeNote says so). */
 function loadChar(ch) {
   const set = langInfo().strokes;
-  const key = set + ch;
+  const hk = hkStrokeOrder();
+  const key = set + (hk ? 'hk' : '') + ch;
   if (!charCache.has(key)) {
     const hangul = set === 'ko' && Core.hangulData(ch);
-    const own = hangul ? Promise.resolve(hangul) : set === 'zh' ? fetchRaw(ch).catch(() => Core.compose(ch, fetchRaw))
+    let own = hangul ? Promise.resolve(hangul) : set === 'zh' ? fetchRaw(ch).catch(() => Core.compose(ch, fetchRaw))
       : fetchRaw(ch, set);
+    if (hk) own = Promise.all([own, hkOrders()]).then(([d, orders]) => (d && orders[ch] ? Core.reorderStrokes(d, orders[ch]) : d));
     charCache.set(key, own.catch(() => null));
   }
   return charCache.get(key);
+}
+
+/* Cantonese in Hong Kong's stroke order (yueStrokeOrder "hk", the default) rather than mainland China's ("mainland"),
+   set on the Practice writing tab (showYueOrder) or in Settings. Mandarin is always in mainland China's order, its
+   own standard. */
+function hkStrokeOrder() {
+  storeCache.delete('yueStrokeOrder');
+  return state.lang === 'yue' && store.get('yueStrokeOrder', 'hk') === 'hk';
+}
+
+/* The Practice writing tab's Cantonese stroke order switch (Hong Kong / Mainland China): shown in Cantonese, set from
+   the saved choice, which Settings changes too. */
+function showYueOrder() {
+  $('yueOrderRow').hidden = state.lang !== 'yue';
+  storeCache.delete('yueStrokeOrder');
+  const order = store.get('yueStrokeOrder', 'hk');
+  document.querySelectorAll('input[name=yueOrder]').forEach((r) => {
+    r.checked = r.value === order;
+    r.onchange = () => { if (r.checked) store.set('yueStrokeOrder', r.value); };
+  });
+}
+
+/* Hong Kong's stroke order for the characters where it differs from the stroke data's (mainland China's), as
+   reorderings of the same strokes: training/hk-order.json, {character: [stroke numbers in Hong Kong's order]}. */
+let hkOrderLoad = null;
+function hkOrders() {
+  if (!hkOrderLoad) hkOrderLoad = fetch('hk-order.json').then((r) => (r.ok ? r.json() : {}), () => ({}));
+  return hkOrderLoad;
 }
 
 // ---------------------------------------------------------------- drawing a worksheet page
@@ -295,9 +325,14 @@ function showStrokeNote(chars) {
   const none = chars.filter((c) => !state.data[c] && Core.isPracticeChar(c, state.lang));
   const lang = langInfo().name;
   const parts = [];
-  if (state.lang === 'yue') {
-    parts.push('Stroke order here follows mainland China\'s standard; Hong Kong\'s differs for some characters, so ' +
-      'check your textbook or teacher where they disagree.');
+  if (state.lang === 'yue' && !hkStrokeOrder()) {
+    parts.push('Stroke order here follows mainland China\'s standard (switch to Hong Kong\'s on the Practice writing ' +
+      'tab); Hong Kong\'s differs for some characters.');
+  } else if (state.lang === 'yue') {
+    const hk = chars.filter((c) => state.data[c] && state.data[c].hk);
+    parts.push((hk.length ? `${hk.join(' ')} ${hk.length > 1 ? 'are' : 'is'} in Hong Kong's stroke order. ` : '') +
+      'Hok6 has Hong Kong\'s order only for the characters where it\'s been checked; the others follow mainland ' +
+      'China\'s standard, which differs for some characters, so check your textbook or teacher where they disagree.');
   }
   if (none.length) {
     parts.push(`No ${lang} stroke order data for ${none.join(' ')}, so ${none.length > 1 ? 'they are' : 'it is'} ` +
@@ -950,16 +985,18 @@ function shownHistory(h, filter) {
 
 async function renderLists() {
   const h = historyAll();
-  const bm = bookmarks().filter(inCurrentLang);
-  const words = Object.keys(h).filter(inCurrentLang).concat(bm);
-  const [table] = await Promise.all([loadReadings(words.join('')),
+  const words = Object.keys(h).filter(inCurrentLang).concat(bookmarks().filter(inCurrentLang));
+  const [table, simplified] = await Promise.all([loadReadings(words.join('')), simplifiedLeftOut(),
     state.lang === 'ja' ? loadWordReadings(words, 'ja') : null]);
+  // Only words of the language as it's set now (Cantonese without simplified characters, unless they're let in).
+  const own = (t) => Core.inLanguage(t, table, state.lang, simplified);
+  const bm = bookmarks().filter(inCurrentLang).filter(own);
 
   const filter = state.historyFilter || 'all';
   // History and bookmarks share one list; the ★ Bookmarks tab shows bookmarks (practised or not), newest first.
   const items = filter === 'bookmarks'
     ? bm.map((t) => h[t] || { text: t })
-    : shownHistory(h, filter).sort((a, b) => b.last - a.last).slice(0, 100);
+    : shownHistory(h, filter).filter((e) => own(e.text)).sort((a, b) => b.last - a.last).slice(0, 100);
   // Clear removes what's listed: this language's history, or only its words or characters.
   $('histClear').textContent = filter !== 'all' ? 'Clear what\'s shown' : 'Clear history';
   const histList = $('histList');
@@ -981,10 +1018,13 @@ function setupLists() {
   });
   // Removes the history entries listed (every page of them), in the current language only: an entry practised in
   // other languages too keeps those.
-  $('histClear').onclick = () => {
+  $('histClear').onclick = async () => {
     const h = historyAll();
     const filter = state.historyFilter || 'all';
-    const shown = shownHistory(h, filter);
+    // What the list shows: in this language as it's set now (see renderLists).
+    const listed = shownHistory(h, filter);
+    const [table, simplified] = await Promise.all([loadReadings(listed.map((e) => e.text).join('')), simplifiedLeftOut()]);
+    const shown = listed.filter((e) => Core.inLanguage(e.text, table, state.lang, simplified));
     if (!shown.length) return toast('Nothing to clear');
     const what = filter === 'words' ? 'words' : filter === 'chars' ? 'characters' : 'words and characters';
     if (!confirm(`Remove ${shown.length} ${what} from your ${langInfo().name} history? Bookmarks and writing are kept.`)) return;
@@ -1107,6 +1147,7 @@ function setLang(lang) {
   document.querySelectorAll('.nameLabel').forEach((n) => { n.textContent = langInfo().nameLabel; });
   // The language being practised, named where words are typed or drawn (and on the New worksheet heading).
   document.querySelectorAll('.langName').forEach((n) => { n.textContent = langInfo().name; });
+  showYueOrder();
   $('fChars').placeholder = `e.g. ${langInfo().examples} — or type English: thank you, good morning`;
   // The right glyph shapes for text drawn with the device's fonts (Japanese and Chinese forms differ).
   document.documentElement.lang = langInfo().html;
@@ -1663,8 +1704,16 @@ function toggleQuizItem(t) {
   renderLists();
 }
 
-function renderQuizCard() {
+/* The quiz's words in the language being practised (and, for Cantonese, without simplified characters unless they're
+   let in), so a quiz never mixes languages. */
+async function quizWords() {
   const items = quizItems().filter(inCurrentLang);
+  const [table, simplified] = await Promise.all([loadReadings(items.join('')), simplifiedLeftOut()]);
+  return items.filter((t) => Core.inLanguage(t, table, state.lang, simplified));
+}
+
+async function renderQuizCard() {
+  const items = await quizWords();
   const out = $('quizItems');
   out.textContent = '';
   for (const t of items) {
@@ -1709,14 +1758,15 @@ function setupQuiz() {
   const saveOpts = () => store.set('quizOpts', { fcDir: chosen('fcDir'), wqPrompt: chosen('wqPrompt'), wqTimer: Number($('wqTimer').value) });
   // Choosing a timer means the Chinese character prompt.
   $('wqTimer').addEventListener('change', () => pick('wqPrompt', 'zh'));
-  $('fcStart').onclick = () => { saveOpts(); startQuiz('cards', chosen('fcDir'), 0, quizItems().filter(inCurrentLang)); };
-  $('wqStart').onclick = () => {
+  $('fcStart').onclick = async () => { saveOpts(); startQuiz('cards', chosen('fcDir'), 0, await quizWords()); };
+  $('wqStart').onclick = async () => {
     saveOpts();
-    startQuiz('write', chosen('wqPrompt'), Number($('wqTimer').value), quizItems().filter(inCurrentLang));
+    startQuiz('write', chosen('wqPrompt'), Number($('wqTimer').value), await quizWords());
   };
-  $('quizClear').onclick = () => {
+  $('quizClear').onclick = async () => {
+    const shown = await quizWords();
     if (!confirm(`Remove all ${langInfo().name} words from the quiz?`)) return;
-    store.set('quiz', quizItems().filter((t) => !inCurrentLang(t)));
+    store.set('quiz', quizItems().filter((t) => !shown.includes(t)));
     renderQuizCard();
     renderLists();
   };
@@ -2374,7 +2424,8 @@ window.addEventListener('resize', () => {
 window.addEventListener('pagehide', saveInk);
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) { saveInk(); return; }
-  applyLangs(); // back from Settings, where the languages may have changed
+  applyLangs(); // back from Settings, where the languages (and Cantonese's stroke order) may have changed
+  showYueOrder();
   // Words may have been added to the quiz on a homework page meanwhile.
   storeCache.delete('quiz');
   renderQuizCard();

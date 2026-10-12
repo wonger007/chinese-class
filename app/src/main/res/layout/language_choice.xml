@@ -22,6 +22,37 @@
         android:text="@string/language_yue_simplified"
         android:textSize="@dimen/text_body" />
 
+    <!-- Cantonese stroke order: Hong Kong's (where Hok6 has it) or mainland China's. -->
+    <RadioGroup
+        android:id="@+id/lang_yue_order"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:gravity="center_vertical"
+            android:paddingEnd="8dp"
+            android:text="@string/yue_stroke_order"
+            android:textSize="@dimen/text_body" />
+
+        <RadioButton
+            android:id="@+id/lang_yue_order_hk"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:text="@string/yue_stroke_order_hk"
+            android:textSize="@dimen/text_body" />
+
+        <RadioButton
+            android:id="@+id/lang_yue_order_mainland"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:text="@string/yue_stroke_order_mainland"
+            android:textSize="@dimen/text_body" />
+    </RadioGroup>
+
     <CheckBox
         android:id="@+id/lang_cmn"
         android:layout_width="match_parent"

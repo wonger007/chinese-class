@@ -300,6 +300,17 @@
     return (d.match(/-?\d+(?:\.\d+)?/g) || []).map(Number);
   }
 
+  /* A character's strokes in another order (Hong Kong's, from training/hk-order.json): `order` lists the stroke
+     numbers (from 0) in the order they're written. Only a reordering of the same strokes; when it isn't one (wrong
+     length, a number missing or repeated), the strokes are kept as they are. Marked `hk` when reordered. */
+  function reorderStrokes(data, order) {
+    const n = data.strokes.length;
+    if (!Array.isArray(order) || order.length !== n || new Set(order).size !== n || order.some((k) => !(k >= 0 && k < n))) {
+      return data;
+    }
+    return Object.assign({}, data, { strokes: order.map((k) => data.strokes[k]), medians: order.map((k) => data.medians[k]), hk: true });
+  }
+
   /* Stroke paths only use absolute M/L/Q/C/Z commands, so the numbers alternate x, y. */
   function mapPath(d, fx, fy) {
     let i = 0;
@@ -610,7 +621,7 @@
 
   const Core = { SHARD_BITS, PAGE, BOX_SIZES, wordLayout, practiceWords, shardsOf, readingsIn, LEFT_PARTS, COMPOSE, mapPath, xBounds, compose, toneLabel,
     englishTokens, englishPhrases, matchScore, pinyinMarks, favourites, LANGS, LANG_CODES, isPracticeChar, scriptLang, charReadings,
-    kanaToRomaji, toHiragana, hangulParts, romanizeHangul, hangulData, entryWord, wordInLang, inLanguage };
+    kanaToRomaji, toHiragana, hangulParts, romanizeHangul, hangulData, entryWord, wordInLang, inLanguage, reorderStrokes };
   if (typeof module !== 'undefined' && module.exports) module.exports = Core;
   else root.Core = Core;
 })(this);

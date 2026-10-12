@@ -87,6 +87,9 @@
     <string name="language_note">The languages you\'re learning: Hok6 gets the voice and handwriting recognition for each. With more than one, Practice &amp; Quiz has a switch between them.</string>
     <string name="language_yue">Cantonese (Jyutping)</string>
     <string name="language_yue_simplified">Simplified characters too (Cantonese is written in traditional)</string>
+    <string name="yue_stroke_order">Stroke order:</string>
+    <string name="yue_stroke_order_hk">Hong Kong</string>
+    <string name="yue_stroke_order_mainland">Mainland China</string>
     <string name="language_cmn">Mandarin (Pinyin)</string>
     <string name="language_ja">Japanese (kanji and kana)</string>
     <string name="language_ko">Korean (hangul)</string>

@@ -356,3 +356,16 @@ test('a word belongs to a language when each character has a reading in it', () 
   assert.ok(Core.inLanguage('谢', table, 'yue', ''));
   assert.ok(Core.inLanguage('谢', table, 'cmn', simplifiedOnly));
 });
+
+test('Hong Kong stroke order: a reordering of the same strokes, or the strokes as they are', () => {
+  const d = { strokes: ['a', 'b', 'c'], medians: [[1], [2], [3]] };
+  assert.deepStrictEqual(Core.reorderStrokes(d, [1, 0, 2]), { strokes: ['b', 'a', 'c'], medians: [[2], [1], [3]], hk: true });
+  for (const bad of [[0, 1], [0, 0, 1], [0, 1, 3], null]) assert.strictEqual(Core.reorderStrokes(d, bad), d);
+  // Every entry in hk-order.json is a reordering of that character's strokes in the stroke data.
+  const orders = JSON.parse(fs.readFileSync(path.join(ASSETS, 'training', 'hk-order.json'), 'utf8'));
+  for (const [ch, order] of Object.entries(orders)) {
+    const data = bundle.get(ch);
+    assert.ok(data, ch + ' is in the stroke data');
+    assert.ok(Core.reorderStrokes(data, order).hk, ch + ' order is a reordering of its ' + data.strokes.length + ' strokes');
+  }
+});
