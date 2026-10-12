@@ -311,7 +311,7 @@
     }
     const moved = { strokes: order.map((k) => data.strokes[k]), medians: order.map((k) => data.medians[k]), hk: true };
     // The radical's strokes (shown in red) are stroke numbers too: they move with their strokes.
-    if (data.radStrokes) moved.radStrokes = data.radStrokes.map((k) => order.indexOf(k));
+    if (data.radStrokes) moved.radStrokes = data.radStrokes.map((k) => order.indexOf(k)).filter((k) => k >= 0);
     return Object.assign({}, data, moved);
   }
 

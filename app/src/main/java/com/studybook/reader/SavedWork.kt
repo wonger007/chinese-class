@@ -54,32 +54,47 @@ class TrainingStore(private val dir: File) {
 
 /**
  * Characters and words set aside for the quiz in writing practice: a JSON list in [TrainingStore], oldest first, and
- * the language each was added in ([LANGS_KEY], an object), so the quiz lists it only in that language.
+ * the languages each was added in ([LANGS_KEY], an object of lists; a single language string in older data), so the
+ * quiz lists a word in those languages only. The same character can be in several languages' quizzes (水 in
+ * Japanese and Cantonese).
  */
 object QuizStash {
     const val KEY = "quiz"
     const val LANGS_KEY = "quizLangs"
 
-    /** Adds the ones not there yet, in the language Practice & Quiz was last in; see the other [add]. */
+    /** Adds them in the language Practice & Quiz was last in; see the other [add]. */
     fun add(context: Context, items: List<String>): Pair<Int, Int> = add(TrainingStore(context), items,
         context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString("language", null))
 
-    /** Adds the ones not there yet (noting [lang] for each, when known); returns how many were added and how many are in the quiz now. */
+    /**
+     * Adds [items] to the quiz in [lang] (when known): new words, and words already there for another language.
+     * Returns how many were added (in [lang]) and how many are in the quiz now.
+     */
     fun add(store: TrainingStore, items: List<String>, lang: String?): Pair<Int, Int> {
         val list = runCatching { JSONArray(store.get(KEY) ?: "[]") }.getOrDefault(JSONArray())
         val langs = runCatching { JSONObject(store.get(LANGS_KEY) ?: "{}") }.getOrDefault(JSONObject())
         val have = (0 until list.length()).mapTo(HashSet()) { list.getString(it) }
         var added = 0
-        for (item in items) if (have.add(item)) {
-            list.put(item)
-            if (lang != null) langs.put(item, lang)
-            added++
+        for (item in items) {
+            val isNew = have.add(item)
+            if (isNew) list.put(item)
+            val inLangs = langsOf(langs, item)
+            val newLang = lang != null && lang !in inLangs
+            if (newLang) langs.put(item, JSONArray(inLangs + lang))
+            if (isNew || (newLang && inLangs.isNotEmpty())) added++
         }
         if (added > 0) {
             store.set(KEY, list.toString())
             if (lang != null) store.set(LANGS_KEY, langs.toString())
         }
         return added to list.length()
+    }
+
+    /** The languages [item] was added to the quiz in: a list, or one language string in older data. */
+    private fun langsOf(langs: JSONObject, item: String): List<String> = when (val v = langs.opt(item)) {
+        is JSONArray -> (0 until v.length()).map { v.getString(it) }
+        is String -> listOf(v)
+        else -> emptyList()
     }
 }
 

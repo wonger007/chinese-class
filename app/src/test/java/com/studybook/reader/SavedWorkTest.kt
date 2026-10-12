@@ -19,12 +19,18 @@ class SavedWorkTest {
     fun quizNotesTheLanguageEachWordWasAddedIn() {
         val store = TrainingStore(folder.newFolder("training"))
         assertEquals(2 to 2, QuizStash.add(store, listOf("学校", "水"), "ja"))
-        assertEquals(1 to 3, QuizStash.add(store, listOf("水", "학교"), "ko"))
+        assertEquals(2 to 3, QuizStash.add(store, listOf("水", "학교"), "ko"))
         assertEquals("""["学校","水","학교"]""", store.get(QuizStash.KEY))
-        // A word already in the quiz keeps the language it was added in.
+        // 水 was already in the quiz in Japanese: adding it in Korean adds that language too (counted as added).
         val langs = JSONObject(store.get(QuizStash.LANGS_KEY)!!)
-        assertEquals("ja", langs.getString("水"))
-        assertEquals("ko", langs.getString("학교"))
+        assertEquals("""["ja","ko"]""", langs.getJSONArray("水").toString())
+        assertEquals("""["ko"]""", langs.getJSONArray("학교").toString())
+        // Adding it again in a language it's already in adds nothing.
+        assertEquals(0 to 3, QuizStash.add(store, listOf("水"), "ja"))
+        // Older data with one language string: kept, and extended.
+        store.set(QuizStash.LANGS_KEY, """{"水":"ja"}""")
+        QuizStash.add(store, listOf("水"), "yue")
+        assertEquals("""["ja","yue"]""", JSONObject(store.get(QuizStash.LANGS_KEY)!!).getJSONArray("水").toString())
         // Language unknown (Practice & Quiz never opened): the word is added without one.
         QuizStash.add(store, listOf("山"), null)
         assertFalse(JSONObject(store.get(QuizStash.LANGS_KEY)!!).has("山"))

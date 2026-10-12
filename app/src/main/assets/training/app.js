@@ -934,7 +934,7 @@ function listItem(t, table, e) {
   star.setAttribute('aria-label', 'Bookmark ' + t);
   star.onclick = () => toggleBookmark(t);
   // 📝 adds it to the quiz (tinted while it's in the quiz; tap again to take it out).
-  const inQuiz = quizItems().includes(t);
+  const inQuiz = inQuizHere(t);
   const quizBtn = document.createElement('button');
   quizBtn.className = 'icon quiz-add' + (inQuiz ? ' sel' : '');
   quizBtn.textContent = '📝';
@@ -973,9 +973,38 @@ function removeFromHistory(t) {
    words are never listed with another's. */
 function inCurrentLang(t) {
   const h = historyAll()[t];
-  const added = store.get('quizLangs', {})[t];
-  if (!h && added) return added === state.lang;
-  return historyLangs(h || { text: t }).includes(state.lang) || added === state.lang;
+  const added = quizLangsOf(t);
+  if (!h && added.length) return added.includes(state.lang);
+  return historyLangs(h || { text: t }).includes(state.lang) || added.includes(state.lang);
+}
+
+/* The languages a word was added to the quiz in (quizLangs: a list, or one language in older data). */
+function quizLangsOf(t) {
+  storeCache.delete('quizLangs');
+  const v = store.get('quizLangs', {})[t];
+  return Array.isArray(v) ? v : v ? [v] : [];
+}
+
+/* Whether a word is in the current language's quiz: the languages it was added in, or (words added before those were
+   noted) the languages it was practised in. The same character can be in several languages' quizzes. */
+function inQuizHere(t) {
+  if (!quizItems().includes(t)) return false;
+  const added = quizLangsOf(t);
+  return added.length ? added.includes(state.lang) : historyLangs(historyAll()[t] || { text: t }).includes(state.lang);
+}
+
+/* Takes words out of the current language's quiz only; a word stays for the other languages it's in. */
+function removeFromQuizHere(words) {
+  const langs = store.get('quizLangs', {});
+  let items = quizItems();
+  for (const t of words) {
+    const before = quizLangsOf(t).length ? quizLangsOf(t) : historyLangs(historyAll()[t] || { text: t });
+    const rest = before.filter((l) => l !== state.lang);
+    if (rest.length) langs[t] = rest;
+    else { delete langs[t]; items = items.filter((x) => x !== t); }
+  }
+  store.set('quizLangs', langs);
+  store.set('quiz', items);
 }
 
 /* History entries the list shows: in the current language, and words or characters per the filter. */
@@ -1719,10 +1748,15 @@ function quizItems() {
 
 /* Adds a word or character to the quiz, or takes it out if it's there (📝 in History and Bookmarks). */
 function toggleQuizItem(t) {
-  const items = quizItems();
-  const on = !items.includes(t);
-  store.set('quiz', on ? items.concat(t) : items.filter((x) => x !== t));
-  if (on) store.set('quizLangs', Object.assign({}, store.get('quizLangs', {}), { [t]: state.lang }));
+  const on = !inQuizHere(t);
+  if (on) {
+    const items = quizItems();
+    if (!items.includes(t)) store.set('quiz', items.concat(t));
+    const was = quizLangsOf(t).length ? quizLangsOf(t) : historyLangs(historyAll()[t] || { text: t }).filter(() => items.includes(t));
+    store.set('quizLangs', Object.assign({}, store.get('quizLangs', {}), { [t]: [...new Set(was.concat(state.lang))] }));
+  } else {
+    removeFromQuizHere([t]);
+  }
   toast(on ? `📝 Added ${t} to the quiz` : `Took ${t} out of the quiz`);
   renderQuizCard();
   renderLists();
@@ -1731,7 +1765,7 @@ function toggleQuizItem(t) {
 /* The quiz's words in the language being practised (and, for Cantonese, without simplified characters unless they're
    let in), so a quiz never mixes languages. */
 async function quizWords() {
-  const items = quizItems().filter(inCurrentLang);
+  const items = quizItems().filter(inQuizHere);
   const [table, simplified] = await Promise.all([loadReadings(items.join('')), simplifiedLeftOut()]);
   return items.filter((t) => Core.inLanguage(t, table, state.lang, simplified));
 }
@@ -1747,7 +1781,7 @@ async function renderQuizCard() {
     chip.querySelector('.q-word').textContent = t;
     const [say, remove] = chip.querySelectorAll('button');
     say.onclick = () => speak(t);
-    remove.onclick = () => { store.set('quiz', quizItems().filter((x) => x !== t)); renderQuizCard(); renderLists(); };
+    remove.onclick = () => { removeFromQuizHere([t]); renderQuizCard(); renderLists(); };
     out.appendChild(chip);
   }
   // Until something is added, a one-line tip says how, instead of the whole card.
@@ -1790,7 +1824,7 @@ function setupQuiz() {
   $('quizClear').onclick = async () => {
     const shown = await quizWords();
     if (!confirm(`Remove all ${langInfo().name} words from the quiz?`)) return;
-    store.set('quiz', quizItems().filter((t) => !shown.includes(t)));
+    removeFromQuizHere(shown);
     renderQuizCard();
     renderLists();
   };
