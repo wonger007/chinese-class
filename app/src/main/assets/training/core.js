@@ -58,6 +58,13 @@
     return readingsIn(entry, lang);
   }
 
+  /* Whether a word belongs to a language: kana are Japanese and hangul Korean (marks such as ー and っ included), and a
+     Han character needs a reading in the language (so 谢 isn't Japanese or Korean). Words that don't are never
+     practised in that language, so languages aren't mixed. */
+  function inLanguage(word, table, lang) {
+    return Array.from(word).every((ch) => isPracticeChar(ch, lang) && (!HAN.test(ch) || readingsIn(table[ch], lang).length > 0));
+  }
+
   // ---------------------------------------------------------------- Japanese: kana → rōmaji (Hepburn)
 
   const KANA_ROMAJI = {};
@@ -601,7 +608,7 @@
 
   const Core = { SHARD_BITS, PAGE, BOX_SIZES, wordLayout, practiceWords, shardsOf, readingsIn, LEFT_PARTS, COMPOSE, mapPath, xBounds, compose, toneLabel,
     englishTokens, englishPhrases, matchScore, pinyinMarks, favourites, LANGS, LANG_CODES, isPracticeChar, scriptLang, charReadings,
-    kanaToRomaji, toHiragana, hangulParts, romanizeHangul, hangulData, entryWord, wordInLang };
+    kanaToRomaji, toHiragana, hangulParts, romanizeHangul, hangulData, entryWord, wordInLang, inLanguage };
   if (typeof module !== 'undefined' && module.exports) module.exports = Core;
   else root.Core = Core;
 })(this);

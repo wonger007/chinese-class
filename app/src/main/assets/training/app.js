@@ -1428,15 +1428,17 @@ function setupOptions() {
 function setupHome() {
   $('homeBack').onclick = () => { if (Native && Native.close) Native.close(); };
   setupOptions();
-  $('newForm').addEventListener('submit', (e) => {
+  $('newForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     useScriptLang($('fChars').value);
-    const words = Core.practiceWords($('fChars').value, state.lang);
+    const typed = Core.practiceWords($('fChars').value, state.lang);
+    const words = await ownWords(typed);
     const chars = [...new Set(words.join(''))];
     const err = $('formError');
     if (!words.length) {
-      err.textContent = Core.englishPhrases($('fChars').value).length
-        ? 'Tap a word above to use it.' : 'Type at least one character, word or English word.';
+      err.textContent = typed.length ? `That isn't ${langInfo().name}: type ${langInfo().name} characters or words, or English.`
+        : Core.englishPhrases($('fChars').value).length
+          ? 'Tap a word above to use it.' : 'Type at least one character, word or English word.';
       err.hidden = false;
       return;
     }
@@ -1444,7 +1446,8 @@ function setupHome() {
     const ws = createWorksheet('', chars, words, formOpts());
     $('fChars').value = '';
     renderTranslations();
-    openSheet(ws);
+    await openSheet(ws);
+    leftOutNote(typed.length - words.length);
   });
 }
 
@@ -1465,15 +1468,31 @@ function createWorksheet(title, chars, words, opts) {
   };
 }
 
+/* The words that belong to the language being practised (Core.inLanguage); others are left out, never mixed in. */
+async function ownWords(words) {
+  const table = await loadReadings(words.join(''));
+  return words.filter((w) => Core.inLanguage(w, table, state.lang));
+}
+
+/* Says how many words were left out for not being in the language (counted, not shown, so they aren't mixed in). */
+function leftOutNote(n) {
+  if (n > 0) toast(`Left out ${n} ${n > 1 ? 'words' : 'word'} that ${n > 1 ? 'aren\'t' : 'isn\'t'} ${langInfo().name}`);
+}
+
 /* Practise some text (from a chapter, History or Bookmarks) on a fresh worksheet. */
 async function practiseText(title, text, fromChapter) {
   useScriptLang(text);
-  const words = Core.practiceWords(text, state.lang);
+  const typed = Core.practiceWords(text, state.lang);
+  const words = await ownWords(typed);
   const chars = [...new Set(words.join(''))];
-  if (!words.length) return;
+  if (!words.length) {
+    if (typed.length) toast(`Not ${langInfo().name}, so there's nothing to practice in ${langInfo().name}`);
+    return;
+  }
   if (fromChapter) state.autoStarted = true;
   const ws = createWorksheet(title, chars, words, Object.assign({}, DEFAULT_OPTS, store.get('lastOpts', {})));
   await openSheet(ws);
+  leftOutNote(typed.length - words.length);
   if (chars.length === 1) openPractice(0);
 }
 

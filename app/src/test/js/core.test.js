@@ -332,3 +332,20 @@ test('worksheet language switch: each word in the language\'s own form', async (
   assert.strictEqual(await Core.wordInLang('ありがとう', 'yue', entriesFor), null);
   assert.strictEqual(await Core.wordInLang('咗', 'ja', entriesFor), null);
 });
+
+test('a word belongs to a language when each character has a reading in it', () => {
+  const table = {};
+  for (const ch of '学學校谢謝') table[ch] = readings(ch);
+  assert.ok(Core.inLanguage('学校', table, 'ja'));
+  assert.ok(Core.inLanguage('ありがとう', table, 'ja'));
+  assert.ok(Core.inLanguage('ちょっと', table, 'ja'));
+  assert.ok(Core.inLanguage('コーヒー', table, 'ja'));
+  assert.ok(Core.inLanguage('學校', table, 'ko'));
+  assert.ok(Core.inLanguage('학교', table, 'ko'));
+  assert.ok(Core.inLanguage('謝謝', table, 'yue'));
+  // A simplified Chinese character isn't Japanese or Korean; kana and hangul belong only to their own language.
+  assert.ok(!Core.inLanguage('谢', table, 'ja'));
+  assert.ok(!Core.inLanguage('谢', table, 'ko'));
+  assert.ok(!Core.inLanguage('学校ありがとう', table, 'yue'));
+  assert.ok(!Core.inLanguage('학교', table, 'ja'));
+});
