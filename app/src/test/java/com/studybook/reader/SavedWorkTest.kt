@@ -16,6 +16,21 @@ class SavedWorkTest {
     @get:Rule val folder = TemporaryFolder()
 
     @Test
+    fun quizNotesTheLanguageEachWordWasAddedIn() {
+        val store = TrainingStore(folder.newFolder("training"))
+        assertEquals(2 to 2, QuizStash.add(store, listOf("学校", "水"), "ja"))
+        assertEquals(1 to 3, QuizStash.add(store, listOf("水", "학교"), "ko"))
+        assertEquals("""["学校","水","학교"]""", store.get(QuizStash.KEY))
+        // A word already in the quiz keeps the language it was added in.
+        val langs = JSONObject(store.get(QuizStash.LANGS_KEY)!!)
+        assertEquals("ja", langs.getString("水"))
+        assertEquals("ko", langs.getString("학교"))
+        // Language unknown (Practice & Quiz never opened): the word is added without one.
+        QuizStash.add(store, listOf("山"), null)
+        assertFalse(JSONObject(store.get(QuizStash.LANGS_KEY)!!).has("山"))
+    }
+
+    @Test
     fun storeKeepsValuesUnderAnyKey() {
         val store = TrainingStore(folder.newFolder("training"))
         store.set("history", """{"你好":{"count":2}}""")

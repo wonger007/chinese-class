@@ -96,9 +96,9 @@ and pinyin/jyutping above characters. Zooming doesn't re-wrap the lines, so trac
   worksheet with stroke order, a row to trace and rows to write in. Tap a pen to go back to writing on the page.
   Scanned pages (pictures with no text) are read on the device; check the characters it found are right.
 - Or tap **Practice & Quiz** on the main screen. Its **✏️ Practice writing** tab makes worksheets (the quiz has its
-  own tab). It opens on **⌨ Type**: type characters, words or English (e.g. *thank you*; English shows words in
-  the language you're practising right under the box; the **+** toggles there add other languages, one row each, and
-  stay as you left them; tap a word to use it, which also switches to its language), or switch to **✍ Draw** to write on the pad and
+  own tab). Its heading names the language you're practising (e.g. **New Korean worksheet**). It opens on **⌨ Type**:
+  type characters, words or English (e.g. *thank you*; English shows words in the language you're practising right
+  under the box; tap one to use it), or switch to **✍ Draw** to write on the pad and
   tap the right one; it's added to **To practice**. **Squares: 1–4** above the pad sets how many characters it holds,
   so a whole word can be written at once, one character per square (remembered). The first time you draw in a language, tap
   **⬇ Download handwriting** under the pad to get its recognition (once; then it works offline). Then tap **Create
@@ -113,19 +113,20 @@ and pinyin/jyutping above characters. Zooming doesn't re-wrap the lines, so trac
   stylus mode. **⋮** holds **Zoom in / out** (the menu stays open while you zoom; tap
   outside it to close).
 - Your writing on a worksheet is kept for each word, so it's still there when you practice that word again.
-- **History** lists the words and characters you've practiced (with quiz results) and your bookmarks, each one tap
-  away from a fresh worksheet, in the language you practiced it in. With more than one language there, a toggle for
-  each (廣東話 Cantonese, 普通話 Mandarin, 日本語 Japanese, 한국어 Korean) shows or hides its words. **📝** on a row adds
-  it to the quiz (tap again to take it out). **✕** on a row removes
-  it (with Undo); **Clear history** removes everything listed, or only what's shown when some languages or Words /
-  Characters are picked (**Clear what's shown**). Bookmarks and writing are kept.
-- If you're learning more than one language (ticked in ⋮ → **Settings** → **Languages**: **廣東話 Cantonese**,
-  **普通話 Mandarin**, **日本語 Japanese**, **한국어 Korean**), switch between them at the top. Typing kana or hangul
+- **History** lists the words and characters you've practiced in the language you're practising now (with quiz
+  results) and your bookmarks, each one tap away from a fresh worksheet. **📝** on a row adds it to the quiz (tap again
+  to take it out). **✕** on a row removes it (with Undo); **Clear history** removes this language's history, or only
+  its words or characters when **Words** or **Characters** is picked (**Clear what's shown**). Bookmarks and writing
+  are kept.
+- If you're learning more than one language (ticked in ⋮ → **Settings** → **Languages**: **Cantonese**,
+  **Mandarin**, **Japanese**, **Korean**), switch between them at the top. Languages are never mixed: History, the
+  quiz and the English look-up show only the language you're practising, alongside English. Typing kana or hangul
   switches to Japanese or Korean by itself. On a worksheet, the switch also writes each word the way that language
-  does (学校 becomes 學校 in Cantonese and 학교 in Korean), with its own stroke order; a word that language's
-  dictionary doesn't have stays as it is. Stroke order only ever comes from the language's own data, never another
-  language's: Korean has stroke order for hangul and for the hanja learned first, so most other hanja (and a few rare
-  characters in other languages) are shown without it, and the worksheet says so.
+  does (学校 becomes 學校 in Cantonese and 학교 in Korean), with its own stroke order; a word that language doesn't
+  have is left out (the message says how many), and switching back brings it back. Stroke order only ever comes from
+  the language's own data, never another language's: Korean has stroke order for hangul and for the hanja learned
+  first, so most other hanja (and a few rare characters in other languages) are shown without it, and the worksheet
+  says so.
 
 On a phone, worksheets show one character at a time with big squares.
 

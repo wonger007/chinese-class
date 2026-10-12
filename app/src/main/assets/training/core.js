@@ -18,10 +18,10 @@
    * ko: AnimCJK hanja, hangul built from its letters below). field: where its readings are in a readings entry.
    */
   const LANGS = {
-    yue: { name: '廣東話 Cantonese', short: '粵', reading: 'Jyutping', strokes: 'zh', field: 0, html: 'zh-HK', nameLabel: '姓名：', examples: '你好 謝謝 唔該' },
-    cmn: { name: '普通話 Mandarin', short: '普', reading: 'Pinyin', strokes: 'zh', field: 1, html: 'zh-CN', nameLabel: '姓名：', examples: '你好 谢谢 学校' },
-    ja: { name: '日本語 Japanese', short: '日', reading: 'reading (kana)', strokes: 'ja', field: 2, html: 'ja', nameLabel: 'なまえ：', examples: 'ありがとう 学校 水' },
-    ko: { name: '한국어 Korean', short: '한', reading: 'romanization', strokes: 'ko', field: 3, html: 'ko', nameLabel: '이름:', examples: '안녕하세요 학교 물' },
+    yue: { name: 'Cantonese', reading: 'Jyutping', strokes: 'zh', field: 0, html: 'zh-HK', nameLabel: '姓名：', examples: '你好 謝謝 唔該' },
+    cmn: { name: 'Mandarin', reading: 'Pinyin', strokes: 'zh', field: 1, html: 'zh-CN', nameLabel: '姓名：', examples: '你好 谢谢 学校' },
+    ja: { name: 'Japanese', reading: 'reading (kana)', strokes: 'ja', field: 2, html: 'ja', nameLabel: 'なまえ：', examples: 'ありがとう 学校 水' },
+    ko: { name: 'Korean', reading: 'romanization', strokes: 'ko', field: 3, html: 'ko', nameLabel: '이름:', examples: '안녕하세요 학교 물' },
   };
   const LANG_CODES = Object.keys(LANGS);
 
@@ -491,8 +491,8 @@
   /* How a word is written in a language (学校 → Cantonese 學校, Korean 학교): from that language's dictionary, else
      through its other forms in the other dictionaries, two steps at most (Korean 학교 → hanja 學校 → Chinese 学校 →
      Japanese 学校). A single character practised in Korean is a hanja, in its traditional form (学 → 學), not the
-     hangul for its sound. Words in no dictionary stay as they are. entriesFor(word, lang) gives a dictionary's
-     entries whose headword or alternative form is the word. */
+     hangul for its sound. Null when the language's dictionary has no form of the word. entriesFor(word, lang) gives
+     a dictionary's entries whose headword or alternative form is the word. */
   async function wordInLang(word, lang, entriesFor) {
     if (lang === 'ko' && /^\p{Script=Han}$/u.test(word)) return wordInLang(word, 'yue', entriesFor);
     const others = ['yue', 'ja', 'ko'].filter((l) => LANGS[l].strokes !== LANGS[lang].strokes);
@@ -514,7 +514,7 @@
       }
       forms = next;
     }
-    return word;
+    return null;
   }
 
   /* "ni3 hao3" → "nǐ hǎo" */

@@ -319,16 +319,16 @@ test('worksheet language switch: each word in the language\'s own form', async (
   assert.deepStrictEqual(await inLangs('学校'), school);
   assert.deepStrictEqual(await inLangs('學校'), school);
   assert.deepStrictEqual(await inLangs('학교'), school);
-  assert.deepStrictEqual(await inLangs('谢谢'), { yue: '謝謝', cmn: '谢谢', ja: '谢谢', ko: '谢谢' });
+  assert.deepStrictEqual(await inLangs('谢谢'), { yue: '謝謝', cmn: '谢谢', ja: null, ko: null });
   // Already the language's own word: kept, even when another entry has the same alternative form.
   assert.strictEqual(await Core.wordInLang('朋友', 'yue', entriesFor), '朋友');
   // A single character in Korean is a hanja, in its traditional form; not the hangul for its sound.
   assert.strictEqual(await Core.wordInLang('学', 'ko', entriesFor), '學');
   assert.strictEqual(await Core.wordInLang('氣', 'ko', entriesFor), '氣');
   // Ambiguous forms aren't followed: 发 is 發 or 髮, 사기 is 士氣 or a word with no hanja.
-  assert.strictEqual(await Core.wordInLang('发', 'ja', entriesFor), '发');
-  assert.strictEqual(await Core.wordInLang('사기', 'yue', entriesFor), '사기');
-  // Words in no dictionary of that language stay as they are.
-  assert.strictEqual(await Core.wordInLang('ありがとう', 'yue', entriesFor), 'ありがとう');
-  assert.strictEqual(await Core.wordInLang('咗', 'ja', entriesFor), '咗');
+  assert.strictEqual(await Core.wordInLang('发', 'ja', entriesFor), null);
+  assert.strictEqual(await Core.wordInLang('사기', 'yue', entriesFor), null);
+  // Words with no form in that language: null (the worksheet leaves them out).
+  assert.strictEqual(await Core.wordInLang('ありがとう', 'yue', entriesFor), null);
+  assert.strictEqual(await Core.wordInLang('咗', 'ja', entriesFor), null);
 });

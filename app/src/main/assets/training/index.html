@@ -28,21 +28,19 @@
       <button type="button" role="tab" id="tabQuiz">📝 Quiz <span id="quizCount" class="tab-count"></span></button>
     </div>
     <form id="newForm" class="card tab-practice">
-      <h2>New worksheet</h2>
+      <h2>New <span class="langName">Cantonese</span> worksheet</h2>
       <div id="inputMode" class="input-mode" role="radiogroup" aria-label="How to enter what to practice" hidden>
         <label><input type="radio" name="inputMode" value="type" checked><span>⌨ Type</span></label>
         <label><input type="radio" name="inputMode" value="draw"><span>✍ Draw</span></label>
       </div>
       <div id="typeArea">
-      <label class="field">Characters, words or English to practice
+      <label class="field"><span><span class="langName">Cantonese</span> characters or words, or English, to practice</span>
         <textarea id="fChars" rows="3" placeholder="e.g. 你好 謝謝 唔該 — or type English: thank you, good morning"></textarea>
         <small>One page per word (separate words with spaces): stroke order, a row to trace, then rows to write it.</small>
       </label>
       <!-- English typed in the box above is looked up here, right under it, so it's clear the words are to tap. -->
       <div id="translateBox" class="tr-box">
-        <h3>English → <span id="trLang">廣東話 Cantonese</span> <span class="tr-tap">— tap a word to use it</span></h3>
-        <!-- Other languages to look English up in too, each a toggle (the one being practised always is). -->
-        <div id="trLangs" class="filters lang-filters tr-langs" role="group" aria-label="Also look up in"></div>
+        <h3>English → <span id="trLang">Cantonese</span> <span class="tr-tap">— tap a word to use it</span></h3>
         <p id="trHint" class="muted">Type English above (e.g. <i>thank you, good morning</i>) and words in the language you're learning appear here. Tap one to use it.</p>
         <div id="trResults"></div>
       </div>
@@ -62,9 +60,9 @@
           <canvas id="hCanvas"></canvas>
         </div>
         <div class="hand-side">
-          <p id="hStatus" class="status">Write a character in each square, then tap the right one below.</p>
+          <p id="hStatus" class="status">Write a Cantonese character in each square, then tap the right one below.</p>
           <!-- When this language's handwriting recognition isn't on the device yet: get it here (no pop-up). -->
-          <button type="button" id="hDownload" class="primary small" hidden>⬇ Download handwriting</button>
+          <button type="button" id="hDownload" class="primary small" hidden>⬇ Download <span class="langName">Cantonese</span> handwriting</button>
           <div id="hCands" class="hand-cands"></div>
           <div class="hand-buttons">
             <button type="button" id="hClear">Clear</button>
@@ -89,8 +87,8 @@
         </fieldset>
         <fieldset class="field">
           <legend>Square guide lines</legend>
-          <label class="check"><input type="radio" name="grid" value="mi" checked> 米 (diagonals)</label>
-          <label class="check"><input type="radio" name="grid" value="tian"> 田 (cross)</label>
+          <label class="check"><input type="radio" name="grid" value="mi" checked> Diagonal guides</label>
+          <label class="check"><input type="radio" name="grid" value="tian"> Cross guides</label>
           <label class="check"><input type="radio" name="grid" value="none"> None</label>
         </fieldset>
         <label class="check"><input id="fStrokes" type="checkbox" checked> Start with the stroke order</label>
@@ -144,8 +142,6 @@
         <button data-filter="chars">Characters</button>
         <button data-filter="bookmarks">★ Bookmarks</button>
       </div>
-      <!-- One toggle per language in the history, when there are two or more (filled in by app.js). -->
-      <div id="histLangs" class="filters lang-filters" role="group" aria-label="Languages shown" hidden></div>
       <ul id="histList" class="items"></ul>
       <p id="histEmpty" class="muted">Words and characters you practice appear here. Tap one to practice it again; tap ☆ to bookmark it.</p>
       <div id="backupRow" class="backup-row" hidden>
@@ -289,6 +285,8 @@
 </div>
 <!-- Less-used worksheet tools, under ⋮ so the title bar has room for the rest at full size. -->
 <div id="moreMenu" class="bar-menu" role="menu" hidden>
+  <!-- Phones: the worksheet's language switch lives here, as the full language names don't fit the title bar. -->
+  <div class="lang menu-lang" id="langSwitch3" role="radiogroup" aria-label="Language" hidden></div>
   <!-- Phones: the stylus / finger toggle lives here, as the title bar is full. -->
   <button id="fingerBtn" role="menuitem" hidden>☝ Finger</button>
   <button id="viewBtn" role="menuitem">📄 Whole pages</button>

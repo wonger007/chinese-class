@@ -89,6 +89,12 @@ button:disabled { opacity: 0.4; }
 #modeBtn[hidden], #fingerBtn[hidden] { display: none !important; }
 @media (max-width: 599px) { #modeBtn { display: none !important; } }
 @media (min-width: 600px) { #fingerBtn { display: none !important; } }
+/* The worksheet's language switch: in the title bar on tablets, in the ⋮ menu on phones (langSwitch3). */
+@media (max-width: 599px) { #langSwitch2 { display: none !important; } }
+@media (min-width: 600px) { #langSwitch3 { display: none !important; } }
+.bar-menu .menu-lang { flex-direction: column; background: none; border-radius: 0; padding: 0 0 4px; margin-bottom: 4px; border-bottom: 1px solid var(--line); }
+.bar-menu .menu-lang span { display: block; border-radius: 8px; padding: 12px 16px; font-size: 16px; }
+.bar-menu .menu-lang input:checked + span { background: var(--sel); color: inherit; }
 .bar button.pen-btn i { display: inline-block; border-radius: 50%; border: 2px solid #fff; vertical-align: middle; }
 .color-tray {
   position: fixed; z-index: 15; display: flex; gap: 8px; padding: 8px;

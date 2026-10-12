@@ -52,21 +52,33 @@ class TrainingStore(private val dir: File) {
     }
 }
 
-/** Characters and words set aside for the quiz in writing practice: a JSON list in [TrainingStore], oldest first. */
+/**
+ * Characters and words set aside for the quiz in writing practice: a JSON list in [TrainingStore], oldest first, and
+ * the language each was added in ([LANGS_KEY], an object), so the quiz lists it only in that language.
+ */
 object QuizStash {
     const val KEY = "quiz"
+    const val LANGS_KEY = "quizLangs"
 
-    /** Adds the ones not there yet; returns how many were added and how many are in the quiz now. */
-    fun add(context: Context, items: List<String>): Pair<Int, Int> {
-        val store = TrainingStore(context)
+    /** Adds the ones not there yet, in the language Practice & Quiz was last in; see the other [add]. */
+    fun add(context: Context, items: List<String>): Pair<Int, Int> = add(TrainingStore(context), items,
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString("language", null))
+
+    /** Adds the ones not there yet (noting [lang] for each, when known); returns how many were added and how many are in the quiz now. */
+    fun add(store: TrainingStore, items: List<String>, lang: String?): Pair<Int, Int> {
         val list = runCatching { JSONArray(store.get(KEY) ?: "[]") }.getOrDefault(JSONArray())
+        val langs = runCatching { JSONObject(store.get(LANGS_KEY) ?: "{}") }.getOrDefault(JSONObject())
         val have = (0 until list.length()).mapTo(HashSet()) { list.getString(it) }
         var added = 0
         for (item in items) if (have.add(item)) {
             list.put(item)
+            if (lang != null) langs.put(item, lang)
             added++
         }
-        if (added > 0) store.set(KEY, list.toString())
+        if (added > 0) {
+            store.set(KEY, list.toString())
+            if (lang != null) store.set(LANGS_KEY, langs.toString())
+        }
         return added to list.length()
     }
 }

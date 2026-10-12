@@ -295,7 +295,7 @@ function showStrokeNote(chars) {
   const note = $('strokeNote');
   note.hidden = !none.length;
   if (!none.length) return;
-  const lang = langInfo().name.split(' ')[1];
+  const lang = langInfo().name;
   note.textContent = `No ${lang} stroke order data for ${none.join(' ')}, so ${none.length > 1 ? 'they are' : 'it is'} ` +
     `shown without stroke order. For the ${lang} order, check your textbook, your teacher or a ${lang} dictionary ` +
     'that shows stroke order; or turn off Stroke order in Worksheet options to practice writing without it.';
@@ -796,10 +796,9 @@ function historyLangs(e) {
   return chinese.length ? chinese : ['yue'];
 }
 
-/* The language to read a history entry in: the current one if it was practised in it, else the one it was. */
+/* The language to read a history entry in: the current one if it belongs to it, else the one it was practised in. */
 function entryLang(e) {
-  const langs = historyLangs(e);
-  return langs.includes(state.lang) ? state.lang : langs[0];
+  return inCurrentLang(e.text) ? state.lang : historyLangs(e)[0];
 }
 
 /* Practises a history entry again, in the language it was practised in (if that language is still being learned). */
@@ -924,59 +923,37 @@ function removeFromHistory(t) {
   });
 }
 
-/* The languages whose history is hidden (their toggles turned off), remembered. */
-function hiddenHistoryLangs() {
-  return store.get('histLangsOff', []);
+/* Whether a word or character belongs to the language being learned now: practised in it, or added to the quiz in
+   it (quizLangs, noted by the app and by 📝). History, Bookmarks and the quiz show only those, so one language's
+   words are never listed with another's. */
+function inCurrentLang(t) {
+  const h = historyAll()[t];
+  const added = store.get('quizLangs', {})[t];
+  if (!h && added) return added === state.lang;
+  return historyLangs(h || { text: t }).includes(state.lang) || added === state.lang;
 }
 
-/* History entries the list shows: in a language whose toggle is on, and words or characters per the filter. */
+/* History entries the list shows: in the current language, and words or characters per the filter. */
 function shownHistory(h, filter) {
-  const off = hiddenHistoryLangs();
   return Object.values(h)
-    .filter((e) => historyLangs(e).some((l) => !off.includes(l)))
+    .filter((e) => historyLangs(e).includes(state.lang))
     .filter((e) => filter === 'all' || (filter === 'words' ? Array.from(e.text).length > 1 : Array.from(e.text).length === 1));
-}
-
-/* One toggle per language in the history (when there are two or more): tap to show or hide that language's words. */
-function renderHistoryLangs(h) {
-  const present = Core.LANG_CODES.filter((l) => Object.values(h).some((e) => historyLangs(e).includes(l)));
-  const row = $('histLangs');
-  row.hidden = present.length < 2;
-  row.innerHTML = '';
-  const off = hiddenHistoryLangs();
-  for (const l of present) {
-    const b = document.createElement('button');
-    b.type = 'button';
-    const on = !off.includes(l);
-    b.className = on ? 'sel' : '';
-    b.textContent = (on ? '✓ ' : '') + Core.LANGS[l].name;
-    b.setAttribute('aria-pressed', String(on));
-    b.onclick = () => {
-      store.set('histLangsOff', on ? off.concat(l) : off.filter((x) => x !== l));
-      renderLists();
-    };
-    row.appendChild(b);
-  }
-  return present;
 }
 
 async function renderLists() {
   const h = historyAll();
-  const words = Object.keys(h).concat(bookmarks());
+  const bm = bookmarks().filter(inCurrentLang);
+  const words = Object.keys(h).filter(inCurrentLang).concat(bm);
   const [table] = await Promise.all([loadReadings(words.join('')),
-    loadWordReadings(words.filter((w) => entryLang(h[w] || { text: w }) === 'ja'), 'ja')]);
+    state.lang === 'ja' ? loadWordReadings(words, 'ja') : null]);
 
-  const bm = bookmarks();
   const filter = state.historyFilter || 'all';
-  const present = renderHistoryLangs(h);
-  const off = hiddenHistoryLangs();
   // History and bookmarks share one list; the ★ Bookmarks tab shows bookmarks (practised or not), newest first.
   const items = filter === 'bookmarks'
-    ? bm.map((t) => h[t] || { text: t }).filter((e) => historyLangs(e).some((l) => !off.includes(l)))
+    ? bm.map((t) => h[t] || { text: t })
     : shownHistory(h, filter).sort((a, b) => b.last - a.last).slice(0, 100);
-  // Clear removes what's listed: all of it, or only the languages (and words or characters) shown.
-  const partial = filter !== 'all' || present.some((l) => off.includes(l));
-  $('histClear').textContent = partial ? 'Clear what\'s shown' : 'Clear history';
+  // Clear removes what's listed: this language's history, or only its words or characters.
+  $('histClear').textContent = filter !== 'all' ? 'Clear what\'s shown' : 'Clear history';
   const histList = $('histList');
   histList.innerHTML = '';
   for (const e of items) histList.appendChild(listItem(e.text, table, e.last ? e : null));
@@ -994,20 +971,17 @@ function setupLists() {
   document.querySelectorAll('.filters button[data-filter]').forEach((b) => {
     b.onclick = () => { state.historyFilter = b.dataset.filter; renderLists(); };
   });
-  // Removes the history entries listed (every page of them): in a hidden language they stay, so an entry practised in
-  // several languages loses only the ones shown.
+  // Removes the history entries listed (every page of them), in the current language only: an entry practised in
+  // other languages too keeps those.
   $('histClear').onclick = () => {
     const h = historyAll();
     const filter = state.historyFilter || 'all';
-    const off = hiddenHistoryLangs();
     const shown = shownHistory(h, filter);
     if (!shown.length) return toast('Nothing to clear');
-    const langs = Core.LANG_CODES.filter((l) => !off.includes(l) && shown.some((e) => historyLangs(e).includes(l)));
     const what = filter === 'words' ? 'words' : filter === 'chars' ? 'characters' : 'words and characters';
-    const names = langs.map((l) => Core.LANGS[l].name).join(', ');
-    if (!confirm(`Remove ${shown.length} ${what} from your history (${names})? Bookmarks and writing are kept.`)) return;
+    if (!confirm(`Remove ${shown.length} ${what} from your ${langInfo().name} history? Bookmarks and writing are kept.`)) return;
     for (const e of shown) {
-      const keep = historyLangs(e).filter((l) => off.includes(l));
+      const keep = historyLangs(e).filter((l) => l !== state.lang);
       if (keep.length) h[e.text].langs = keep;
       else delete h[e.text];
     }
@@ -1030,7 +1004,7 @@ function setupLists() {
     $('aboutBtn2').hidden = true;
   }
   $('bmPractise').onclick = () => {
-    const all = bookmarks().join('');
+    const all = bookmarks().filter(inCurrentLang).join('');
     if (all) practiseText('★ Bookmarks ' + new Date().toLocaleDateString(), all, false);
   };
 }
@@ -1042,11 +1016,11 @@ function learnedLangs() {
   return Array.isArray(langs) && langs.length ? langs : [state.lang];
 }
 
-/* The language switches (on the home screen, and a short one on the worksheet): one button per language ticked, in
-   Settings' order; full names for two, the languages' own names for more, so they fit. */
+/* The language switches (on the home screen, and on the worksheet: in its title bar, or its ⋮ menu on phones): one
+   button per language ticked, in Settings' order, named in English, the language they all share. */
 function applyLangs() {
   const langs = Core.LANG_CODES.filter((l) => learnedLangs().includes(l));
-  [['langSwitch', 'lang'], ['langSwitch2', 'lang2']].forEach(([id, name]) => {
+  [['langSwitch', 'lang'], ['langSwitch2', 'lang2'], ['langSwitch3', 'lang3']].forEach(([id, name]) => {
     const group = $(id);
     group.hidden = langs.length < 2;
     group.innerHTML = '';
@@ -1054,10 +1028,12 @@ function applyLangs() {
       const info = Core.LANGS[l];
       const label = document.createElement('label');
       label.innerHTML = `<input type="radio" name="${name}" value="${l}"><span></span>`;
-      label.querySelector('span').textContent = name === 'lang2' ? info.short : langs.length > 2 ? info.name.split(' ')[0] : info.name;
+      label.querySelector('span').textContent = info.name;
       label.querySelector('input').checked = l === state.lang;
       label.querySelector('input').addEventListener('change', (e) => {
-        if (e.target.checked) (name === 'lang2' ? switchSheetLang : setLang)(l);
+        if (!e.target.checked) return;
+        if (name === 'lang3') $('moreMenu').hidden = true;
+        (name === 'lang' ? setLang : switchSheetLang)(l);
       });
       group.appendChild(label);
     }
@@ -1072,31 +1048,57 @@ function useScriptLang(text) {
 }
 
 /* The worksheet's language switch: the words become that language's own (学校 → Cantonese 學校, Korean 학교), so the
-   squares show its characters and stroke order; words with no form there stay as they are. */
+   squares show its characters and stroke order. Always from the words the worksheet was made with, so switching back
+   brings them back. A word with no form in that language is left out (languages are never mixed on a worksheet),
+   unless it's a single character with that language's own stroke data; with no word left, the language stays. */
 async function switchSheetLang(lang) {
   const ws = state.ws;
-  if (ws && ws.words.length) {
-    const words = await Promise.all(ws.words.map((w) => Core.wordInLang(w, lang, dictEntriesFor)));
-    if (state.ws === ws && words.some((w, i) => w !== ws.words[i])) {
-      saveInk();
-      const chars = [...new Set(words.join(''))];
-      // A title made from the words follows them; one the worksheet was given (a chapter's name) stays.
-      const title = ws.title === createWorksheetTitle(ws.words, ws.chars) ? createWorksheetTitle(words, chars) : ws.title;
-      state.ws = Object.assign({}, ws, { words, chars, title });
-      $('sheetTitle').textContent = state.ws.title;
-      loadInk();
-      state.undo = [];
-    }
+  if (!ws || !ws.words.length) return setLang(lang);
+  const origin = ws.origin || { lang: state.lang, words: ws.words, title: ws.title };
+  let words = origin.words;
+  let missing = [];
+  if (lang !== origin.lang) {
+    const found = await Promise.all(origin.words.map(async (w) => (await Core.wordInLang(w, lang, dictEntriesFor))
+      || (Array.from(w).length === 1 && await hasOwnStrokes(w, lang) ? w : null)));
+    if (state.ws !== ws) return;
+    words = found.filter(Boolean);
+    missing = origin.words.filter((w, i) => !found[i]);
   }
+  const name = Core.LANGS[lang].name;
+  if (!words.length) {
+    toast(`No ${name} form of ${origin.words.length > 1 ? 'these words' : 'this word'}, so the worksheet stays in ${langInfo().name}`);
+    return setLang(state.lang);
+  }
+  saveInk();
+  const chars = [...new Set(words.join(''))];
+  // A title made from the words follows them; one the worksheet was given (a chapter's name) stays.
+  const title = origin.title === createWorksheetTitle(origin.words, []) ? createWorksheetTitle(words, chars) : origin.title;
+  state.ws = Object.assign({}, ws, { words, chars, title, origin });
+  state.row = Math.min(state.row, words.length - 1);
+  $('sheetTitle').textContent = title;
+  loadInk();
+  state.undo = [];
   setLang(lang);
+  // Counted, not shown: the other language's words would mix it into this one.
+  if (missing.length) toast(`Left out ${missing.length} ${missing.length > 1 ? 'words' : 'word'} with no ${name} form`);
+}
+
+/* Whether a character has stroke data of a language's own (the Japanese or Korean set; the Chinese for Cantonese and
+   Mandarin). */
+function hasOwnStrokes(ch, lang) {
+  const set = Core.LANGS[lang].strokes;
+  if (set === 'ko' && Core.hangulData(ch)) return Promise.resolve(true);
+  return fetchRaw(ch, set).then(() => true, () => false);
 }
 
 function setLang(lang) {
   state.lang = lang;
   store.set('lang', lang);
-  document.querySelectorAll('input[name=lang], input[name=lang2]').forEach((r) => { r.checked = r.value === lang; });
+  document.querySelectorAll('input[name=lang], input[name=lang2], input[name=lang3]').forEach((r) => { r.checked = r.value === lang; });
   document.querySelectorAll('.romanName').forEach((n) => { n.textContent = romanName(); });
   document.querySelectorAll('.nameLabel').forEach((n) => { n.textContent = langInfo().nameLabel; });
+  // The language being practised, named where words are typed or drawn (and on the New worksheet heading).
+  document.querySelectorAll('.langName').forEach((n) => { n.textContent = langInfo().name; });
   $('fChars').placeholder = `e.g. ${langInfo().examples} — or type English: thank you, good morning`;
   // The right glyph shapes for text drawn with the device's fonts (Japanese and Chinese forms differ).
   document.documentElement.lang = langInfo().html;
@@ -1104,7 +1106,7 @@ function setLang(lang) {
   if (Native && Native.setLanguage) Native.setLanguage(lang);
   if (!$('sheet').hidden && state.ws) renderPages();
   if (!$('practice').hidden) updatePracticeTitle();
-  if (!$('home').hidden) renderTranslations();
+  if (!$('home').hidden) { renderTranslations(); renderLists(); renderQuizCard(); }
   // The pad starts again in the new language (and says if its handwriting needs downloading).
   if (!$('drawArea').hidden) { $('hDownload').hidden = true; layoutHandPad(); requestAnimationFrame(recognizeHand); }
 }
@@ -1405,7 +1407,7 @@ function formOpts() {
 
 function showOptSummary() {
   const o = formOpts();
-  const bits = [{ large: 'Large', medium: 'Medium', small: 'Small' }[o.size], { mi: '米', tian: '田', none: 'no guide lines' }[o.grid]];
+  const bits = [{ large: 'Large', medium: 'Medium', small: 'Small' }[o.size], { mi: 'diagonal guides', tian: 'cross guides', none: 'no guide lines' }[o.grid]];
   if (o.strokes) bits.push('stroke order');
   if (o.roman) bits.push(romanName());
   if (o.name) bits.push(langInfo().nameLabel.replace(/[：:]$/, ''));
@@ -1521,34 +1523,6 @@ async function searchEnglish(phrase, lang = state.lang) {
     .slice(0, 8);
 }
 
-/* The languages English is looked up in: the current one, then any others switched on with their toggles (remembered;
-   off at first, so the list stays short). */
-function lookupLangs() {
-  const extra = store.get('trLangs', []);
-  return [state.lang].concat(Core.LANG_CODES.filter((l) => l !== state.lang && extra.includes(l)));
-}
-
-/* The toggles for the other languages, above the suggestions. */
-function renderLookupToggles() {
-  const row = $('trLangs');
-  row.innerHTML = '';
-  const extra = store.get('trLangs', []);
-  for (const l of Core.LANG_CODES.filter((x) => x !== state.lang)) {
-    const on = extra.includes(l);
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = on ? 'sel' : '';
-    b.textContent = (on ? '✓ ' : '+ ') + Core.LANGS[l].name.split(' ')[0];
-    b.setAttribute('aria-pressed', String(on));
-    b.setAttribute('aria-label', (on ? 'Stop looking up in ' : 'Also look up in ') + Core.LANGS[l].name);
-    b.onclick = () => {
-      store.set('trLangs', on ? extra.filter((x) => x !== l) : extra.concat(l));
-      renderTranslations();
-    };
-    row.appendChild(b);
-  }
-}
-
 /* A word's reading for its suggestion chip, in its language. */
 function chipReading(e, lang, table) {
   if (lang === 'yue') return e[3] || romanOfText(e[0], table, lang);
@@ -1557,37 +1531,23 @@ function chipReading(e, lang, table) {
   return Core.romanizeHangul(e[0]);
 }
 
-/* Practises a word suggested in another language: switches to it (adding it to the languages learned if needed). */
-function useLang(lang) {
-  if (lang === state.lang) return;
-  const learned = learnedLangs();
-  if (!learned.includes(lang)) {
-    store.set('langs', Core.LANG_CODES.filter((l) => l === lang || learned.includes(l)));
-    toast(`Added ${Core.LANGS[lang].name} to your languages`);
-  }
-  setLang(lang);
-  applyLangs();
-}
-
 let translateTimer = 0;
 let translateRun = 0;
 
-/* Shows words for any English typed in the practice box, in every language (the current one first, then a row for
-   each of the others). Tapping one replaces the English with it, switching to its language. */
+/* Shows words for any English typed in the practice box, in the language being learned (only that one, so languages
+   are never mixed). Tapping one replaces the English with it. */
 function renderTranslations() {
   clearTimeout(translateTimer);
   translateTimer = setTimeout(async () => {
     const run = ++translateRun;
     const phrases = Core.englishPhrases($('fChars').value);
-    const langs = lookupLangs();
-    $('trLang').textContent = langs.length > 1 ? langs.map((l) => Core.LANGS[l].name.split(' ')[0]).join(' · ') : langInfo().name;
-    renderLookupToggles();
+    const langs = [state.lang];
+    $('trLang').textContent = langInfo().name;
     $('trHint').hidden = phrases.length > 0;
     if (!phrases.length) { $('trResults').innerHTML = ''; return; }
-    // results[phrase][language]: the current language gets up to 8 words, the others 4 each; with only the current
-    // language, its words have no language label.
-    const results = await Promise.all(phrases.map((p) => Promise.all(langs.map(async (l, k) =>
-      (await searchEnglish(p, l)).slice(0, k === 0 ? 8 : 4)))));
+    // results[phrase][0]: up to 8 words.
+    const results = await Promise.all(phrases.map((p) => Promise.all(langs.map(async (l) =>
+      (await searchEnglish(p, l)).slice(0, 8)))));
     if (run !== translateRun) return;
     const all = results.flat(2);
     const table = await loadReadings(all.map((e) => e[0] + e[1]).join(''));
@@ -1615,13 +1575,7 @@ function renderTranslations() {
       langs.forEach((lang, k) => {
         if (!results[i][k].length) return;
         const group = document.createElement('div');
-        group.className = 'tr-lang' + (k === 0 ? ' current' : '');
-        if (langs.length > 1) {
-          const name = document.createElement('span');
-          name.className = 'tr-lang-name';
-          name.textContent = Core.LANGS[lang].name.split(' ')[0];
-          group.appendChild(name);
-        }
+        group.className = 'tr-lang current';
         for (const e of results[i][k]) {
           const word = Core.entryWord(e, lang);
           const chip = document.createElement('button');
@@ -1639,7 +1593,6 @@ function renderTranslations() {
             const rx = new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/ /g, '\\s+'), 'i');
             field.value = rx.test(field.value) ? field.value.replace(rx, ' ' + word + ' ') : field.value + ' ' + word;
             field.value = field.value.replace(/\s+/g, ' ').replace(/^ | $/g, '').replace(/ ?[,，] ?/g, ' ');
-            useLang(lang);
             renderTranslations();
           };
           group.appendChild(chip);
@@ -1667,13 +1620,14 @@ function toggleQuizItem(t) {
   const items = quizItems();
   const on = !items.includes(t);
   store.set('quiz', on ? items.concat(t) : items.filter((x) => x !== t));
+  if (on) store.set('quizLangs', Object.assign({}, store.get('quizLangs', {}), { [t]: state.lang }));
   toast(on ? `📝 Added ${t} to the quiz` : `Took ${t} out of the quiz`);
   renderQuizCard();
   renderLists();
 }
 
 function renderQuizCard() {
-  const items = quizItems();
+  const items = quizItems().filter(inCurrentLang);
   const out = $('quizItems');
   out.textContent = '';
   for (const t of items) {
@@ -1718,11 +1672,14 @@ function setupQuiz() {
   const saveOpts = () => store.set('quizOpts', { fcDir: chosen('fcDir'), wqPrompt: chosen('wqPrompt'), wqTimer: Number($('wqTimer').value) });
   // Choosing a timer means the Chinese character prompt.
   $('wqTimer').addEventListener('change', () => pick('wqPrompt', 'zh'));
-  $('fcStart').onclick = () => { saveOpts(); startQuiz('cards', chosen('fcDir'), 0, quizItems()); };
-  $('wqStart').onclick = () => { saveOpts(); startQuiz('write', chosen('wqPrompt'), Number($('wqTimer').value), quizItems()); };
+  $('fcStart').onclick = () => { saveOpts(); startQuiz('cards', chosen('fcDir'), 0, quizItems().filter(inCurrentLang)); };
+  $('wqStart').onclick = () => {
+    saveOpts();
+    startQuiz('write', chosen('wqPrompt'), Number($('wqTimer').value), quizItems().filter(inCurrentLang));
+  };
   $('quizClear').onclick = () => {
-    if (!confirm('Remove everything from the quiz?')) return;
-    store.set('quiz', []);
+    if (!confirm(`Remove all ${langInfo().name} words from the quiz?`)) return;
+    store.set('quiz', quizItems().filter((t) => !inCurrentLang(t)));
     renderQuizCard();
     renderLists();
   };
@@ -1740,7 +1697,7 @@ function shuffle(list) {
 
 function startQuiz(mode, opt, timer, items) {
   if (!items.length) return;
-  Object.assign(quiz, { mode, opt, timer, deck: shuffle(items.slice()), i: 0, results: new Map(), lang: state.lang });
+  Object.assign(quiz, { mode, opt, timer, deck: shuffle(items.slice()), i: 0, results: new Map() });
   $('qTitle').textContent = mode === 'cards' ? 'Flash cards' : 'Written quiz';
   $('home').hidden = true;
   $('quizView').hidden = false;
@@ -1749,8 +1706,6 @@ function startQuiz(mode, opt, timer, items) {
 
 function closeQuiz() {
   stopQuizItem();
-  // Back to the language that was chosen (each card used its own word's language).
-  if (quiz.lang) state.lang = quiz.lang;
   $('quizView').hidden = true;
   $('home').hidden = false;
   renderQuizCard();
@@ -1813,9 +1768,6 @@ async function showQuizItem() {
   const run = quiz.run;
   if (quiz.i >= quiz.deck.length) return showQuizSummary();
   const item = quiz.deck[quiz.i];
-  // Each word is read, spoken, explained and written in the language it was practised in (the quiz mixes languages).
-  state.lang = quiz.lang; // so a word practised in the chosen language stays in it
-  state.lang = entryLang(historyAll()[item] || { text: item });
   $('qProgress').textContent = `${quiz.i + 1} / ${quiz.deck.length}`;
   $('qSummary').hidden = true;
   document.querySelector('.q-side').hidden = false;
@@ -2152,8 +2104,9 @@ function layoutHandPad() {
 }
 
 function padHint() {
-  return store.get('handCells', 2) === 1 ? 'Write a character in the square, then tap the right one below.'
-    : 'Write a word, one character per square, then tap the right one below.';
+  const lang = langInfo().name;
+  return store.get('handCells', 2) === 1 ? `Write a ${lang} character in the square, then tap the right one below.`
+    : `Write a ${lang} word, one character per square, then tap the right one below.`;
 }
 
 function drawHand() {

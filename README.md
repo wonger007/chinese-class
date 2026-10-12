@@ -87,7 +87,7 @@ The [**User Guide**](USER_GUIDE.md) shows how to use all of this step by step.
   on-device text recognition.
 - **Practice & Quiz** for Cantonese (Jyutping), Mandarin (Pinyin), Japanese (kana and rōmaji) and Korean (Revised
   Romanization):
-  - writing worksheets with 米 / 田 grids, grey characters to trace and stroke order above each row, printed or shared
+  - writing worksheets with guide lines, grey characters to trace and stroke order above each row, printed or shared
     as a US Letter PDF, blank or with your writing;
   - stroke-order animation, step-by-step strokes, a writing quiz and voices (at 1×, 0.75× or 0.5×) for each character;
   - type English to find words in offline dictionaries, or **✍ Draw** a character (on-device handwriting recognition);
