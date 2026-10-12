@@ -132,8 +132,8 @@ Console with release permissions for Hok6; its JSON key stays outside the repo, 
 ### Character data
 
 The stroke data (`hanzi.bin`, `kanji.bin`, `hanja.bin` in `app/src/main/assets/`), the readings
-(`training/readings/`) and the dictionaries (`training/dict/`, `dict-ja/`, `dict-ko/`) are generated from their
-sources by:
+(`training/readings/`), the dictionaries (`training/dict/`, `dict-ja/`, `dict-ko/`) and the simplified-only
+characters (`training/simplified.txt`) are generated from their sources by:
 
 ```bash
 python3 tools/build_assets.py
@@ -194,8 +194,9 @@ The data and libraries it bundles keep their own licenses (listed under Credits 
 
 - **Stroke order data** (`app/src/main/assets/hanzi.bin`; Japanese and Korean in `kanji.bin` and `hanja.bin`):
   Arphic Public License.
-- **English → Chinese dictionary** (`app/src/main/assets/training/dict/`): adapted (selected and reformatted) from
-  CC-CEDICT and CC-Canto, and shared under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
+- **English → Chinese dictionary** (`app/src/main/assets/training/dict/`, and the list of simplified-only
+  characters derived from it, `training/simplified.txt`): adapted (selected and reformatted) from CC-CEDICT and
+  CC-Canto, and shared under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
 - **English → Japanese dictionary** (`training/dict-ja/`): adapted from JMdict and KANJIDIC2 and shared under
   [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
 - **English → Korean dictionary** (`training/dict-ko/`): adapted from kengdic, under the
