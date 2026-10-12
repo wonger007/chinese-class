@@ -94,7 +94,10 @@ and pinyin/jyutping above characters. Zooming doesn't re-wrap the lines, so trac
 - On a page, tap **Practice Selector**, then tap a character: Hok6 shows the characters on **that page** (in a Word
   document, that paragraph), not the whole file. Pick the ones you want and tap **Practice (n)** to get a
   worksheet with stroke order, a row to trace and rows to write in. Tap a pen to go back to writing on the page.
-  Scanned pages (pictures with no text) are read on the device; check the characters it found are right.
+  Scanned pages (pictures with no text) are read on the device; check the characters it found are right. If you're
+  learning more than one language, the **🌐** button before **Practice Selector** shows the language you're practising
+  and switches it. If a scanned page looks like another language, Hok6 asks whether to use it for your language
+  anyway or switch (a page that's nearly all kanji can look Chinese).
 - Or tap **Practice & Quiz** on the main screen. Its **✏️ Practice writing** tab makes worksheets (the quiz has its
   own tab). Its heading names the language you're practising (e.g. **New Korean worksheet**). It opens on **⌨ Type**:
   type characters, words or English (e.g. *thank you*; English shows words in the language you're practising right

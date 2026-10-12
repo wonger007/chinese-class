@@ -27,6 +27,8 @@ class PractiseFlow(
     private val docxText: InkTextView,
     /** The worksheet's title: the open file's name, or the chapter's. */
     private val title: () -> String,
+    /** Called when the language to practise is switched here (the title bar shows it). */
+    private val onLanguageChanged: () -> Unit = {},
 ) {
     /** Characters and their positions on each page of the open PDF, read in the background. */
     private var pdfGlyphs: Deferred<List<List<PdfGlyph>>>? = null
@@ -57,10 +59,13 @@ class PractiseFlow(
             val recognised = PdfText.practiceCharacters(glyphs).isEmpty()
             if (recognised) {
                 val reads = recognisedPages[page] ?: recognisePage(page).also { recognisedPages[page] = it }
-                // Only a page in the language being practised is offered, read by that language's recogniser.
-                val want = LanguageChars.script(Downloads.language(activity))
+                // The page is read by the recogniser of the language being practised. When the page looks like
+                // another language, the user decides: use it for this language anyway, or switch languages.
+                var want = LanguageChars.script(Downloads.language(activity))
                 val pageScript = LanguageChars.pageScript(reads.mapValues { PdfText.practiceCharacters(it.value) })
-                if (pageScript != null && pageScript != want) return@launch noneInLanguage(R.string.practise_page_not_lang)
+                if (pageScript != null && pageScript != want) {
+                    want = LanguageChars.script(askPageLanguage(pageScript) ?: return@launch)
+                }
                 glyphs = reads[want].orEmpty()
             }
             val own = ownChars()
@@ -75,6 +80,40 @@ class PractiseFlow(
             val scope = activity.getString(R.string.practise_from_page, page + 1, pdf.pageCount)
             PracticePicker.show(activity, characters, preselected, scope, recognised) { practise(it) }
         }
+    }
+
+    /**
+     * A scanned page that looks like another language ([pageScript]) than the one being practised: asks whether to
+     * use it for the practised language anyway, or switch to the page's (when it's being learned). Returns the
+     * language to practise, or null to cancel. A guess can be wrong (a page almost all kanji looks Chinese).
+     */
+    private suspend fun askPageLanguage(pageScript: String): String? = suspendCancellableCoroutine { cont ->
+        val current = Downloads.language(activity)
+        val currentName = LanguageChars.name(activity, current)
+        val pageLangs = Downloads.languages(activity).filter { LanguageChars.script(it) == pageScript }
+        val pageName = when {
+            pageScript != "zh" -> LanguageChars.name(activity, pageScript)
+            pageLangs.size == 1 -> LanguageChars.name(activity, pageLangs[0])
+            else -> activity.getString(R.string.page_lang_or,
+                LanguageChars.name(activity, "yue"), LanguageChars.name(activity, "cmn"))
+        }
+        var answered = false
+        fun answer(lang: String?) { if (!answered) { answered = true; cont.resume(lang) } }
+        val dialog = com.google.android.material.dialog.MaterialAlertDialogBuilder(activity)
+            .setTitle(activity.getString(R.string.page_lang_title, pageName))
+            .setMessage(activity.getString(R.string.page_lang_message, currentName))
+            .setPositiveButton(activity.getString(R.string.page_lang_use, currentName)) { _, _ -> answer(current) }
+            .setNegativeButton(android.R.string.cancel) { _, _ -> answer(null) }
+            .setOnCancelListener { answer(null) }
+        pageLangs.firstOrNull()?.let { lang ->
+            dialog.setNeutralButton(activity.getString(R.string.page_lang_switch, LanguageChars.name(activity, lang))) { _, _ ->
+                Downloads.setLanguage(activity, lang)
+                onLanguageChanged()
+                answer(lang)
+            }
+        }
+        val shown = dialog.show()
+        cont.invokeOnCancellation { shown.dismiss() }
     }
 
     /** Runs on-device text recognition on a rendered PDF page, with every recogniser (see [PdfOcr.readAll]). */

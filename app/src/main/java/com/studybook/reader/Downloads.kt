@@ -185,6 +185,15 @@ object Downloads {
     }
 
     /**
+     * Switches the language being practised (as Practice & Quiz's switch does), from the homework page's title bar or
+     * when a scanned page turns out to be in another language. Kept where Practice & Quiz reads it.
+     */
+    fun setLanguage(context: Context, lang: String) {
+        TrainingStore(context).set(KEY_LANG, "\"$lang\"")
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString("language", lang).apply()
+    }
+
+    /**
      * Whether Cantonese takes simplified characters too (学, 谢), as well as traditional; off at first. Kept with writing
      * practice's data (JSON true or false), which reads it as "yueSimplified".
      */

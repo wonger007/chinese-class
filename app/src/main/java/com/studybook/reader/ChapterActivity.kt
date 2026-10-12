@@ -73,6 +73,8 @@ class ChapterActivity : AppCompatActivity() {
     /** The tracing and zoom tools in the title bar, shown while a file is open. */
     private lateinit var fileTools: View
     private lateinit var practiseButton: TextView
+    /** The language Practice Selector practises in, a list to switch it (only with more than one language). */
+    private lateinit var practiseLangButton: TextView
     private lateinit var modeButton: TextView
     private lateinit var penButton: ImageButton
     private lateinit var sizeButton: ImageButton
@@ -114,6 +116,7 @@ class ChapterActivity : AppCompatActivity() {
         docxText = findViewById(R.id.docx_text)
         fileTools = findViewById(R.id.file_tools)
         practiseButton = findViewById(R.id.practise_mode)
+        practiseLangButton = findViewById(R.id.practise_lang)
         modeButton = findViewById(R.id.ink_mode)
         eraserButton = findViewById(R.id.ink_eraser)
         penButton = findViewById(R.id.ink_pen)
@@ -135,7 +138,8 @@ class ChapterActivity : AppCompatActivity() {
         pdf = PdfViewer(findViewById(R.id.pdf_frame), findViewById(R.id.pdf_pages), pageIndicator as TextView, ink)
         pageIndicator.setOnClickListener { askPage() }
         audio = AudioBar(this) { adapter.playing = it }
-        practice = PractiseFlow(this, pdf, docxText) { current?.name?.substringBeforeLast('.') ?: chapterName }
+        practice = PractiseFlow(this, pdf, docxText, { current?.name?.substringBeforeLast('.') ?: chapterName },
+            ::updatePractiseLanguage)
         pdf.onPageTap = { page, x, y -> practice.pickFromPdf(page, x, y) }
         docxText.customSelectionActionModeCallback = practice.Selection()
         docxText.onTapAt = { offset -> practice.pickFromDocx(offset) }
@@ -196,6 +200,20 @@ class ChapterActivity : AppCompatActivity() {
         menu.findItem(R.id.move_files).isVisible = files.isNotEmpty()
         menu.findItem(R.id.save_traced).isVisible = current?.kind == Kind.PDF
         return super.onPrepareOptionsMenu(menu)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Practice & Quiz or Settings may have switched the language meanwhile.
+        if (::practiseLangButton.isInitialized) updatePractiseLanguage()
+    }
+
+    /** Shows the language being practised on its title bar button ("Japanese ▾"), with more than one language. */
+    private fun updatePractiseLanguage() {
+        val lang = Downloads.language(this)
+        practiseLangButton.isVisible = Downloads.languages(this).size > 1
+        practiseLangButton.text = getString(R.string.practise_language_button, LanguageChars.name(this, lang))
+        practiseLangButton.contentDescription = getString(R.string.practise_language, LanguageChars.name(this, lang))
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -572,6 +590,18 @@ class ChapterActivity : AppCompatActivity() {
             if (ink.practising) Toast.makeText(this, R.string.practise_on_hint, Toast.LENGTH_SHORT).show()
             updateInkTools()
         }
+        practiseLangButton.setOnClickListener { view ->
+            val langs = Downloads.languages(this)
+            val menu = android.widget.PopupMenu(this, view)
+            langs.forEachIndexed { i, lang -> menu.menu.add(0, i, i, LanguageChars.name(this, lang)) }
+            menu.setOnMenuItemClickListener { item ->
+                Downloads.setLanguage(this, langs[item.itemId])
+                updatePractiseLanguage()
+                true
+            }
+            menu.show()
+        }
+        updatePractiseLanguage()
         penButton.setOnClickListener { showColours() }
         eraserButton.setOnClickListener {
             ink.tool = if (ink.tool == InkTool.ERASER) InkTool.PEN else InkTool.ERASER

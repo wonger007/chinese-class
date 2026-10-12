@@ -47,11 +47,23 @@
                     android:orientation="horizontal"
                     android:paddingEnd="4dp">
 
+                    <!-- The language Practice Selector practises in (a list; only with more than one language). -->
+                    <TextView
+                        android:id="@+id/practise_lang"
+                        style="@style/BarTextButton"
+                        android:background="@drawable/bar_language"
+                        android:paddingStart="14dp"
+                        android:paddingEnd="14dp"
+                        android:textStyle="bold"
+                        android:contentDescription="@string/practise_language"
+                        android:visibility="gone" />
+
                     <TextView
                         android:id="@+id/practise_mode"
                         style="@style/BarTextButton"
                         android:contentDescription="@string/practise_mode"
                         android:text="@string/practice_selector" />
+
 
                     <!-- Who writes: the stylus only (fingers scroll) or fingers too. Only on devices that take a stylus. -->
                     <TextView
