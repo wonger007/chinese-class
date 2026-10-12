@@ -74,7 +74,7 @@ class PractiseFlow(
         val bitmap = suspendCancellableCoroutine<Bitmap?> { cont -> pdf.renderPage(page, pixels) { cont.resume(it) } }
             ?: return emptyList()
         return try {
-            PdfOcr.recognise(bitmap, widthPoints.toFloat() / pixels, Downloads.languages(activity))
+            PdfOcr.recognise(bitmap, widthPoints.toFloat() / pixels, listOf(Downloads.language(activity)))
         } finally {
             bitmap.recycle()
         }

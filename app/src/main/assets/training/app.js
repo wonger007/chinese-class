@@ -2176,7 +2176,7 @@ window.handReady = function handReady(lang, ok) {
   }
 };
 
-window.inkResult = function inkResult(id, result) {
+window.inkResult = async function inkResult(id, result) {
   if (id !== hand.request || $('drawArea').hidden) return;
   const status = $('hStatus');
   $('hDownload').hidden = !(result.missing || result.error);
@@ -2192,12 +2192,17 @@ window.inkResult = function inkResult(id, result) {
     status.textContent = 'Handwriting recognition isn\'t ready: check the internet connection and try again. (' + result.error + ')';
     return;
   }
-  status.textContent = hand.strokes.length ? 'Tap the right one:' : padHint();
+  // A word comes back with spaces between its characters sometimes; they aren't part of it. Only words of the
+  // language being practised are offered (Core.inLanguage), so writing another language's isn't recognised.
+  const words = result.candidates.map((t) => t.replace(/\s+/g, '')).filter((t) => t && Array.from(t).every(isHan));
+  const table = await loadReadings(words.join(''));
+  if (id !== hand.request || $('drawArea').hidden) return;
+  const own = [...new Set(words)].filter((w) => Core.inLanguage(w, table, state.lang));
+  status.textContent = !hand.strokes.length ? padHint()
+    : own.length ? 'Tap the right one:' : `Not recognised as ${langInfo().name}: try writing it again.`;
   const out = $('hCands');
   out.textContent = '';
-  // A word comes back with spaces between its characters sometimes; they aren't part of it.
-  const words = result.candidates.map((t) => t.replace(/\s+/g, '')).filter((t) => t && Array.from(t).every(isHan));
-  for (const c of [...new Set(words)].slice(0, 8)) {
+  for (const c of own.slice(0, 8)) {
     const b = document.createElement('button');
     b.textContent = c;
     b.onclick = () => { addToBox(c); clearHand(); };

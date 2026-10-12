@@ -171,6 +171,15 @@ object Downloads {
         return listOf(store.get(KEY_LANG)?.trim('"')?.takeIf { it in LANGS } ?: "yue")
     }
 
+    /**
+     * The language being practised now: the one Practice & Quiz was last switched to, if it's still being learned,
+     * else the first learned. Text on scanned pages is recognised in it alone, so languages aren't mixed.
+     */
+    fun language(context: Context): String {
+        val learned = languages(context)
+        return TrainingStore(context).get(KEY_LANG)?.trim('"')?.takeIf { it in learned } ?: learned.first()
+    }
+
     fun setLanguages(context: Context, langs: List<String>) =
         TrainingStore(context).set(KEY_LANGS, JSONArray(LANGS.filter { it in langs }).toString())
 

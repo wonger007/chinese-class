@@ -13,8 +13,8 @@ import kotlin.coroutines.resume
 
 /**
  * On-device text recognition (Google ML Kit) for scanned PDF pages that have no text layer: Chinese, Japanese or
- * Korean, following the languages being learned. Results use the same [PdfGlyph] boxes as real PDF text, so taps work
- * the same way.
+ * Korean, in the language being practised (PractiseFlow passes just that one). Results use the same [PdfGlyph] boxes
+ * as real PDF text, so taps work the same way.
  */
 object PdfOcr {
     private val chinese by lazy { TextRecognition.getClient(ChineseTextRecognizerOptions.Builder().build()) }
