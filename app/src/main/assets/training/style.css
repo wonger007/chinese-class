@@ -6,6 +6,8 @@
   --text: #212121;
   --muted: #6B6B6B;
   --line: #D6D6D6;
+  /* Scroll bar thumbs (see "Scroll bars" below); lighter in dark mode. */
+  --scroll: rgba(0, 0, 0, 0.32);
   --sel: rgba(198, 40, 40, 0.16);
   /* The title bar, and red text on the page (both change in dark mode). */
   --bar: #C62828;
@@ -19,6 +21,7 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --bg: #1C1C1C; --card: #2A2A2A; --text: #EEEEEE; --muted: #A8A8A8; --line: #444;
+    --scroll: rgba(255, 255, 255, 0.38);
     --bar: #8E1B1B; --red-text: #EF5350; --hint-bg: #3A3220; --hint-text: #F5E6C8; --star: #FBC02D;
   }
 }
@@ -67,6 +70,18 @@ button:disabled { opacity: 0.4; }
 /* The worksheet's tools stay on one line (sliding sideways if the screen is too narrow), so the page keeps its room. */
 .bar.tools { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
 .bar.tools::-webkit-scrollbar { display: none; }
+
+/* Scroll bars: a slim rounded bar that stays visible wherever there's more to see (Android otherwise shows one only
+   while scrolling, so it isn't clear a panel goes on). The title bar's tools keep theirs hidden (above). */
+.home-main, #pages, .items, #rowView, .modal-card, .quiz-main { scrollbar-width: thin; scrollbar-color: var(--scroll) transparent; }
+.home-main::-webkit-scrollbar, #pages::-webkit-scrollbar, .items::-webkit-scrollbar, #rowView::-webkit-scrollbar,
+.modal-card::-webkit-scrollbar, .quiz-main::-webkit-scrollbar { width: 10px; height: 10px; }
+.home-main::-webkit-scrollbar-track, #pages::-webkit-scrollbar-track, .items::-webkit-scrollbar-track,
+#rowView::-webkit-scrollbar-track, .modal-card::-webkit-scrollbar-track, .quiz-main::-webkit-scrollbar-track { background: transparent; }
+.home-main::-webkit-scrollbar-thumb, #pages::-webkit-scrollbar-thumb, .items::-webkit-scrollbar-thumb,
+#rowView::-webkit-scrollbar-thumb, .modal-card::-webkit-scrollbar-thumb, .quiz-main::-webkit-scrollbar-thumb {
+  background: var(--scroll); border-radius: 999px; border: 2px solid transparent; background-clip: padding-box;
+}
 .bar.tools > :not(h1):not(.spacer), .bar.tools .group > * { flex-shrink: 0; }
 .bar.tools h1 { min-width: 0; }
 .bar button.tbtn.more-btn { font-size: 24px; font-weight: 700; }
