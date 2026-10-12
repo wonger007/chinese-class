@@ -302,13 +302,17 @@
 
   /* A character's strokes in another order (Hong Kong's, from training/hk-order.json): `order` lists the stroke
      numbers (from 0) in the order they're written. Only a reordering of the same strokes; when it isn't one (wrong
-     length, a number missing or repeated), the strokes are kept as they are. Marked `hk` when reordered. */
+     length, a number missing or repeated), the strokes are kept as they are. Marked `hk` when reordered; the radical's
+     strokes (radStrokes) are renumbered to match. */
   function reorderStrokes(data, order) {
     const n = data.strokes.length;
     if (!Array.isArray(order) || order.length !== n || new Set(order).size !== n || order.some((k) => !(k >= 0 && k < n))) {
       return data;
     }
-    return Object.assign({}, data, { strokes: order.map((k) => data.strokes[k]), medians: order.map((k) => data.medians[k]), hk: true });
+    const moved = { strokes: order.map((k) => data.strokes[k]), medians: order.map((k) => data.medians[k]), hk: true };
+    // The radical's strokes (shown in red) are stroke numbers too: they move with their strokes.
+    if (data.radStrokes) moved.radStrokes = data.radStrokes.map((k) => order.indexOf(k));
+    return Object.assign({}, data, moved);
   }
 
   /* Stroke paths only use absolute M/L/Q/C/Z commands, so the numbers alternate x, y. */

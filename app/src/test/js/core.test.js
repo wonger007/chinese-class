@@ -361,6 +361,9 @@ test('Hong Kong stroke order: a reordering of the same strokes, or the strokes a
   const d = { strokes: ['a', 'b', 'c'], medians: [[1], [2], [3]] };
   assert.deepStrictEqual(Core.reorderStrokes(d, [1, 0, 2]), { strokes: ['b', 'a', 'c'], medians: [[2], [1], [3]], hk: true });
   for (const bad of [[0, 1], [0, 0, 1], [0, 1, 3], null]) assert.strictEqual(Core.reorderStrokes(d, bad), d);
+  // The radical's strokes (drawn in red) keep pointing at the same strokes after reordering.
+  const withRadical = { strokes: ['a', 'b', 'c'], medians: [[1], [2], [3]], radStrokes: [2] };
+  assert.deepStrictEqual(Core.reorderStrokes(withRadical, [2, 0, 1]).radStrokes, [0]);
   // Every entry in hk-order.json is a reordering of that character's strokes in the stroke data.
   const orders = JSON.parse(fs.readFileSync(path.join(ASSETS, 'training', 'hk-order.json'), 'utf8'));
   for (const [ch, order] of Object.entries(orders)) {
