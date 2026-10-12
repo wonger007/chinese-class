@@ -166,8 +166,7 @@
     <string name="practise_not_lang">That isn\'t a %1$s character</string>
     <string name="practise_language">Language to practice: %1$s</string>
     <string name="practise_language_button">🌐 %1$s ▾</string>
-    <string name="page_lang_title">This page looks like %1$s</string>
-    <string name="page_lang_message">You\'re practicing %1$s. Hok6 only offers characters of the language you practice, so use the page for %1$s or switch.</string>
+    <string name="page_lang_title">This page looks like %1$s, and you\'re practicing %2$s. Hok6 only offers characters of the language you practice:</string>
     <string name="page_lang_use">Use it for %1$s</string>
     <string name="page_lang_switch">Switch to %1$s</string>
     <string name="page_lang_or">%1$s or %2$s</string>

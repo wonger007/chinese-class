@@ -72,7 +72,8 @@ class PractiseFlow(
             val characters = PdfText.practiceCharacters(glyphs).filter(own::has)
             if (characters.isEmpty()) return@launch noneInLanguage(R.string.practise_none_lang)
             val pressed = if (x != null && y != null) PdfText.glyphAt(glyphs, x, y, slop = 6f) else null
-            if (x != null && pressed == null) {
+            // On a scanned page a missed tap is often a misread character: show the page's list anyway.
+            if (x != null && pressed == null && !recognised) {
                 Toast.makeText(activity, R.string.practise_miss, Toast.LENGTH_SHORT).show()
                 return@launch
             }
@@ -88,6 +89,10 @@ class PractiseFlow(
      * language to practise, or null to cancel. A guess can be wrong (a page almost all kanji looks Chinese).
      */
     private suspend fun askPageLanguage(pageScript: String): String? = suspendCancellableCoroutine { cont ->
+        if (activity.isFinishing || activity.isDestroyed) {
+            cont.resume(null)
+            return@suspendCancellableCoroutine
+        }
         val current = Downloads.language(activity)
         val currentName = LanguageChars.name(activity, current)
         val pageLangs = Downloads.languages(activity).filter { LanguageChars.script(it) == pageScript }
@@ -97,22 +102,25 @@ class PractiseFlow(
             else -> activity.getString(R.string.page_lang_or,
                 LanguageChars.name(activity, "yue"), LanguageChars.name(activity, "cmn"))
         }
+        // The choices: this language anyway, then each language being learned that the page could be in.
+        val choices = listOf(current) + pageLangs
+        val labels = listOf(activity.getString(R.string.page_lang_use, currentName)) +
+            pageLangs.map { activity.getString(R.string.page_lang_switch, LanguageChars.name(activity, it)) }
         var answered = false
         fun answer(lang: String?) { if (!answered) { answered = true; cont.resume(lang) } }
-        val dialog = com.google.android.material.dialog.MaterialAlertDialogBuilder(activity)
-            .setTitle(activity.getString(R.string.page_lang_title, pageName))
-            .setMessage(activity.getString(R.string.page_lang_message, currentName))
-            .setPositiveButton(activity.getString(R.string.page_lang_use, currentName)) { _, _ -> answer(current) }
-            .setNegativeButton(android.R.string.cancel) { _, _ -> answer(null) }
-            .setOnCancelListener { answer(null) }
-        pageLangs.firstOrNull()?.let { lang ->
-            dialog.setNeutralButton(activity.getString(R.string.page_lang_switch, LanguageChars.name(activity, lang))) { _, _ ->
-                Downloads.setLanguage(activity, lang)
-                onLanguageChanged()
+        val shown = com.google.android.material.dialog.MaterialAlertDialogBuilder(activity)
+            .setTitle(activity.getString(R.string.page_lang_title, pageName, currentName))
+            .setItems(labels.toTypedArray()) { _, i ->
+                val lang = choices[i]
+                if (lang != current) {
+                    Downloads.setLanguage(activity, lang)
+                    onLanguageChanged()
+                }
                 answer(lang)
             }
-        }
-        val shown = dialog.show()
+            .setNegativeButton(android.R.string.cancel) { _, _ -> answer(null) }
+            .setOnCancelListener { answer(null) }
+            .show()
         cont.invokeOnCancellation { shown.dismiss() }
     }
 
