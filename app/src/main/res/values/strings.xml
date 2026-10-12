@@ -213,7 +213,6 @@
     <string name="other_name">Use another name</string>
     <string name="saved_as">Saved %1$s</string>
     <string name="save_failed">Couldn\'t save: %1$s</string>
-    <string name="practice">Practice</string>
     <string name="practice_selector">Practice Selector</string>
     <string name="pen_colour">Pen colour</string>
     <string name="quiz_button">Add to quiz (%1$d)</string>

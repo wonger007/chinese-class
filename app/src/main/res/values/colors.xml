@@ -1,7 +1,6 @@
 <resources>
     <color name="brand">#C62828</color>
     <color name="brand_dark">#8E0000</color>
-    <color name="accent">#F9A825</color>
     <!-- Favourite stars: a darker gold on light cards so they stand out; brighter in dark mode. -->
     <color name="star">#B07F00</color>
     <!-- Red for text, icons and controls on the page; lighter in dark mode (values-night) so it reads on dark grey. -->

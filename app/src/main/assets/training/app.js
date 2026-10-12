@@ -54,18 +54,6 @@ const store = {
   },
 };
 
-/* Earlier versions kept everything in localStorage, which is lost when the app is reinstalled; move it to the app. */
-(function moveToAppStorage() {
-  if (!NativeStore) return;
-  try {
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (NativeStore.storeGet(key) == null) NativeStore.storeSet(key, localStorage.getItem(key));
-    }
-    localStorage.clear();
-  } catch (e) { /* ignore */ }
-}());
-
 const DEFAULT_OPTS = { size: 'large', grid: 'mi', strokes: true, roman: true, name: true };
 
 const state = {

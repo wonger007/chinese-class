@@ -552,9 +552,9 @@
     return [...new Set(words)];
   }
 
-  const Core = { SHARD_BITS, PAGE, BOX_SIZES, wordLayout, practiceWords, shardsOf, readingsIn, LEFT_PARTS, COMPOSE, pathNumbers, mapPath, xBounds, compose, YUE_TONES, toneLabel,
+  const Core = { SHARD_BITS, PAGE, BOX_SIZES, wordLayout, practiceWords, shardsOf, readingsIn, LEFT_PARTS, COMPOSE, mapPath, xBounds, compose, toneLabel,
     englishTokens, englishPhrases, matchScore, pinyinMarks, favourites, LANGS, LANG_CODES, isPracticeChar, scriptLang, charReadings,
-    kanaToRomaji, toHiragana, hangulParts, romanizeHangul, hangulStrokes, hangulData, entryWord };
+    kanaToRomaji, toHiragana, hangulParts, romanizeHangul, hangulData, entryWord };
   if (typeof module !== 'undefined' && module.exports) module.exports = Core;
   else root.Core = Core;
 })(this);
