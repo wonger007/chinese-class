@@ -8,6 +8,8 @@
 const SVGNS = 'http://www.w3.org/2000/svg';
 const PAGE_W = 215.9, PAGE_H = 279.4;
 const MODEL = '#111111', GREY = '#C8C8C8', GRID = '#CFCFCF', BRAND = '#C62828';
+// The radical's strokes in the stroke order panel, when shown (Radical button): green, as red means the next stroke.
+const RADICAL = '#2E7D32';
 const PEN_SIZES = [0.45, 0.8, 1.3];
 /* How thick each pen size is drawn on its button and in the thickness drawer, in px. */
 const SIZE_LINES = [3, 6, 10];
@@ -1191,6 +1193,17 @@ function wordOf(ch) {
   return words.find((w) => Array.from(w).length > 1 && w.includes(ch)) || null;
 }
 
+/* The stroke order panel's Radical button: on (green radical) or off, and hidden for a character whose stroke data
+   doesn't say which strokes are its radical. */
+function showRadicalButton() {
+  const on = store.get('showRadical', false);
+  const b = $('pRadical');
+  b.hidden = !(pData && pData.radStrokes && pData.radStrokes.length);
+  b.classList.toggle('sel', on);
+  b.setAttribute('aria-pressed', String(on));
+  b.textContent = on ? 'Radical: green' : 'Radical';
+}
+
 /* The 米 guide and border behind a Hanzi Writer box (the practice panel's, or the quiz's). */
 function drawWriterGrid(size, g = $('pGrid')) {
   g.innerHTML = '';
@@ -1224,8 +1237,9 @@ async function openPractice(idx) {
   target.innerHTML = '';
   writer = null;
   pData = await loadChar(ch);
-  const buttons = ['pAnimate', 'pStep', 'pQuiz', 'pOutline'];
+  const buttons = ['pAnimate', 'pStep', 'pQuiz', 'pOutline', 'pRadical'];
   buttons.forEach((b) => { $(b).disabled = !pData; });
+  showRadicalButton();
   $('pStrip').innerHTML = '';
   if (!pData) {
     status('No stroke order data for this character.');
@@ -1239,7 +1253,7 @@ async function openPractice(idx) {
     padding: Math.round(size * 0.06),
     showOutline: outline,
     strokeColor: '#222222',
-    radicalColor: BRAND,
+    radicalColor: store.get('showRadical', false) ? RADICAL : null,
     outlineColor: '#DDDDDD',
     drawingColor: '#1E88E5',
     drawingWidth: Math.max(6, Math.round(size / 28)),
@@ -1312,6 +1326,14 @@ function setupPractice() {
     outline = !outline;
     if (outline) writer.showOutline(); else writer.hideOutline();
     $('pOutline').classList.toggle('sel', !outline);
+  };
+  // Radical: its strokes in green (remembered), or all in black.
+  $('pRadical').onclick = () => {
+    if (!writer) return;
+    const on = !store.get('showRadical', false);
+    store.set('showRadical', on);
+    writer.updateColor('radicalColor', on ? RADICAL : null);
+    showRadicalButton();
   };
 }
 

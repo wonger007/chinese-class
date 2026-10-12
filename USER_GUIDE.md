@@ -104,7 +104,8 @@ and pinyin/jyutping above characters. Zooming doesn't re-wrap the lines, so trac
   **⬇ Download handwriting** under the pad to get its recognition (once; then it works offline). Then tap **Create
   worksheet**. Box size, guide lines and the rest are under **Worksheet options** (kept from your last worksheet).
   Words you've practiced are in **History** below, one tap from a fresh worksheet.
-- On a worksheet, tap a stroke-order square to watch the strokes and try **✍ Write it**; tap 🔊 to hear the word,
+- On a worksheet, tap a stroke-order square to watch the strokes and try **✍ Write it** (red is always the stroke
+  being written; **Radical** shows the character's radical, the part dictionaries sort it under, in green); tap 🔊 to hear the word,
   and the speed button next to it for 1×, 0.75× or 0.5×. Tone names are shown with the reading (e.g. nei5 · tone 5,
   low rising).
 - The worksheet's title bar works like a homework page's: tap the pen for the colours, the line for the thickness,
