@@ -1041,7 +1041,9 @@ function applyLangs() {
       label.innerHTML = `<input type="radio" name="${name}" value="${l}"><span></span>`;
       label.querySelector('span').textContent = name === 'lang2' ? info.short : langs.length > 2 ? info.name.split(' ')[0] : info.name;
       label.querySelector('input').checked = l === state.lang;
-      label.querySelector('input').addEventListener('change', (e) => { if (e.target.checked) setLang(l); });
+      label.querySelector('input').addEventListener('change', (e) => {
+        if (e.target.checked) (name === 'lang2' ? switchSheetLang : setLang)(l);
+      });
       group.appendChild(label);
     }
   });
@@ -1052,6 +1054,26 @@ function applyLangs() {
 function useScriptLang(text) {
   const lang = Core.scriptLang(text);
   if (lang && lang !== state.lang && learnedLangs().includes(lang)) setLang(lang);
+}
+
+/* The worksheet's language switch: the words become that language's own (学校 → Cantonese 學校, Korean 학교), so the
+   squares show its characters and stroke order; words with no form there stay as they are. */
+async function switchSheetLang(lang) {
+  const ws = state.ws;
+  if (ws && ws.words.length) {
+    const words = await Promise.all(ws.words.map((w) => Core.wordInLang(w, lang, dictEntriesFor)));
+    if (state.ws === ws && words.some((w, i) => w !== ws.words[i])) {
+      saveInk();
+      const chars = [...new Set(words.join(''))];
+      // A title made from the words follows them; one the worksheet was given (a chapter's name) stays.
+      const title = ws.title === createWorksheetTitle(ws.words, ws.chars) ? createWorksheetTitle(words, chars) : ws.title;
+      state.ws = Object.assign({}, ws, { words, chars, title });
+      $('sheetTitle').textContent = state.ws.title;
+      loadInk();
+      state.undo = [];
+    }
+  }
+  setLang(lang);
 }
 
 function setLang(lang) {
@@ -1411,11 +1433,15 @@ function setupHome() {
 
 /* A worksheet for the given characters. Only its words (in History), its options (as defaults) and the writing on each
    word are stored, so practising a word again brings back what was written on it. */
+function createWorksheetTitle(words, chars) {
+  return (words.length ? words.join(' ') : chars.join('')).slice(0, 30);
+}
+
 function createWorksheet(title, chars, words, opts) {
   store.set('lastOpts', opts);
   return {
     id: Date.now().toString(36),
-    title: title || (words.length ? words.join(' ') : chars.join('')).slice(0, 30),
+    title: title || createWorksheetTitle(words, chars),
     chars,
     words,
     opts,

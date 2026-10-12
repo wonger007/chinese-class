@@ -299,3 +299,36 @@ test('Japanese and Korean dictionaries find everyday words for common English', 
   assert.strictEqual(Core.entryWord(['謝謝', '谢谢'], 'cmn'), '谢谢');
   assert.strictEqual(Core.entryWord(['学校', 'がっこう'], 'ja'), '学校');
 });
+
+/* The app's dictEntriesFor, from the bundled files: entries whose headword or alternative form is the word. */
+async function entriesFor(word, lang) {
+  const dir = path.join(ASSETS, 'training', { zh: 'dict', ja: 'dict-ja', ko: 'dict-ko' }[Core.LANGS[lang].strokes]);
+  const read = (name) => {
+    const file = path.join(dir, name + '.json');
+    return fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : null;
+  };
+  const chunk = read('meta').chunk;
+  const ids = (read('c' + (word.codePointAt(0) >> Core.SHARD_BITS).toString(16)) || {})[word] || [];
+  return ids.map((i) => read('e' + Math.floor(i / chunk))[i % chunk]);
+}
+
+test('worksheet language switch: each word in the language\'s own form', async () => {
+  const inLangs = async (word) => Object.fromEntries(await Promise.all(['yue', 'cmn', 'ja', 'ko'].map(
+    async (l) => [l, await Core.wordInLang(word, l, entriesFor)])));
+  const school = { yue: '學校', cmn: '学校', ja: '学校', ko: '학교' };
+  assert.deepStrictEqual(await inLangs('学校'), school);
+  assert.deepStrictEqual(await inLangs('學校'), school);
+  assert.deepStrictEqual(await inLangs('학교'), school);
+  assert.deepStrictEqual(await inLangs('谢谢'), { yue: '謝謝', cmn: '谢谢', ja: '谢谢', ko: '谢谢' });
+  // Already the language's own word: kept, even when another entry has the same alternative form.
+  assert.strictEqual(await Core.wordInLang('朋友', 'yue', entriesFor), '朋友');
+  // A single character in Korean is a hanja, in its traditional form; not the hangul for its sound.
+  assert.strictEqual(await Core.wordInLang('学', 'ko', entriesFor), '學');
+  assert.strictEqual(await Core.wordInLang('氣', 'ko', entriesFor), '氣');
+  // Ambiguous forms aren't followed: 发 is 發 or 髮, 사기 is 士氣 or a word with no hanja.
+  assert.strictEqual(await Core.wordInLang('发', 'ja', entriesFor), '发');
+  assert.strictEqual(await Core.wordInLang('사기', 'yue', entriesFor), '사기');
+  // Words in no dictionary of that language stay as they are.
+  assert.strictEqual(await Core.wordInLang('ありがとう', 'yue', entriesFor), 'ありがとう');
+  assert.strictEqual(await Core.wordInLang('咗', 'ja', entriesFor), '咗');
+});

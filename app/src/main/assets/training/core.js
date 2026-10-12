@@ -470,6 +470,53 @@
     return lang === 'cmn' ? entry[1] : entry[0];
   }
 
+  /* The form of a word in a language's dictionary entries for it: the word itself if it already is one, else its
+     most common entry's (Mandarin: words also said outside Cantonese first). Null when there are no entries. */
+  function formIn(word, entries, lang) {
+    if (!entries.length) return null;
+    if (entries.some((e) => entryWord(e, lang) === word)) return word;
+    const rank = (e) => (lang === 'cmn' && e[5] ? 10 : 0) + (e[6] || 9);
+    return entryWord(entries.reduce((best, e) => (rank(e) < rank(best) ? e : best)), lang);
+  }
+
+  /* The other written form of a word (traditional or simplified, hangul or hanja) when all its dictionary entries
+     agree on one; none when they don't (发 is 發 or 髮; 사기 is 士氣 or a word with no hanja). Kana readings don't
+     count: words that only sound the same aren't the same word. */
+  function otherForms(word, entries) {
+    const kana = /^[\p{Script=Hiragana}\p{Script=Katakana}ー]+$/u;
+    const forms = entries.map((e) => [e[0], e[1]].filter((w) => w && w !== word && !kana.test(w)).join('|'));
+    return forms.length && forms.every((f) => f === forms[0]) && forms[0] && !forms[0].includes('|') ? [forms[0]] : [];
+  }
+
+  /* How a word is written in a language (学校 → Cantonese 學校, Korean 학교): from that language's dictionary, else
+     through its other forms in the other dictionaries, two steps at most (Korean 학교 → hanja 學校 → Chinese 学校 →
+     Japanese 学校). A single character practised in Korean is a hanja, in its traditional form (学 → 學), not the
+     hangul for its sound. Words in no dictionary stay as they are. entriesFor(word, lang) gives a dictionary's
+     entries whose headword or alternative form is the word. */
+  async function wordInLang(word, lang, entriesFor) {
+    if (lang === 'ko' && /^\p{Script=Han}$/u.test(word)) return wordInLang(word, 'yue', entriesFor);
+    const others = ['yue', 'ja', 'ko'].filter((l) => LANGS[l].strokes !== LANGS[lang].strokes);
+    const seen = new Set([word]);
+    let forms = [word];
+    for (let step = 0; forms.length; step++) {
+      for (const form of forms) {
+        const found = formIn(form, await entriesFor(form, lang), lang);
+        if (found) return found;
+      }
+      if (step === 2) break;
+      const next = [];
+      for (const form of forms) {
+        for (const l of others) {
+          for (const f of otherForms(form, await entriesFor(form, l))) {
+            if (!seen.has(f)) { seen.add(f); next.push(f); }
+          }
+        }
+      }
+      forms = next;
+    }
+    return word;
+  }
+
   /* "ni3 hao3" → "nǐ hǎo" */
   function pinyinMarks(numbered) {
     const marks = { a: 'āáǎà', e: 'ēéěè', i: 'īíǐì', o: 'ōóǒò', u: 'ūúǔù', 'ü': 'ǖǘǚǜ' };
@@ -554,7 +601,7 @@
 
   const Core = { SHARD_BITS, PAGE, BOX_SIZES, wordLayout, practiceWords, shardsOf, readingsIn, LEFT_PARTS, COMPOSE, mapPath, xBounds, compose, toneLabel,
     englishTokens, englishPhrases, matchScore, pinyinMarks, favourites, LANGS, LANG_CODES, isPracticeChar, scriptLang, charReadings,
-    kanaToRomaji, toHiragana, hangulParts, romanizeHangul, hangulData, entryWord };
+    kanaToRomaji, toHiragana, hangulParts, romanizeHangul, hangulData, entryWord, wordInLang };
   if (typeof module !== 'undefined' && module.exports) module.exports = Core;
   else root.Core = Core;
 })(this);

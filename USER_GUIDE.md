@@ -121,7 +121,9 @@ and pinyin/jyutping above characters. Zooming doesn't re-wrap the lines, so trac
   Characters are picked (**Clear what's shown**). Bookmarks and writing are kept.
 - If you're learning more than one language (ticked in ⋮ → **Settings** → **Languages**: **廣東話 Cantonese**,
   **普通話 Mandarin**, **日本語 Japanese**, **한국어 Korean**), switch between them at the top. Typing kana or hangul
-  switches to Japanese or Korean by itself.
+  switches to Japanese or Korean by itself. On a worksheet, the switch also writes each word the way that language
+  does (学校 becomes 學校 in Cantonese and 학교 in Korean), with its own stroke order; a word that language's
+  dictionary doesn't have stays as it is.
 
 On a phone, worksheets show one character at a time with big squares.
 
