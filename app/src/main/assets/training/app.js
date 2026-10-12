@@ -163,15 +163,17 @@ function fetchRaw(ch, set = 'zh') {
   });
 }
 
-/* A character's stroke data in the current language: its own forms first (Japanese 必, Korean hangul built from its
-   letters), then the Chinese data (Japanese and Korean use many of the same characters). */
+/* A character's stroke data in the current language. Japanese: only the Japanese data (kanji and kana written the
+   Japanese way, 必), never the Chinese; a character without it has no stroke order. Korean: hangul built from its
+   letters, hanja from the Korean data, then the Chinese data. */
 function loadChar(ch) {
   const set = langInfo().strokes;
   const key = set + ch;
   if (!charCache.has(key)) {
     const chinese = () => fetchRaw(ch).catch(() => Core.compose(ch, fetchRaw));
     const hangul = set === 'ko' && Core.hangulData(ch);
-    const own = hangul ? Promise.resolve(hangul) : set === 'zh' ? chinese() : fetchRaw(ch, set).catch(chinese);
+    const own = hangul ? Promise.resolve(hangul) : set === 'zh' ? chinese() : set === 'ja' ? fetchRaw(ch, 'ja')
+      : fetchRaw(ch, set).catch(chinese);
     charCache.set(key, own.catch(() => null));
   }
   return charCache.get(key);
