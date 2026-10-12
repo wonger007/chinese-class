@@ -157,7 +157,13 @@
     <string name="recognising">Reading the characters on this page…</string>
     <string name="practise_button">Practice (%1$d)</string>
     <string name="select_all">Select all</string>
-    <string name="practise_no_chinese">The selection has no characters to practice</string>
+    <string name="practise_no_chinese">The selection has no %1$s characters to practice</string>
+    <string name="practise_none_lang">No %1$s characters to practice here</string>
+    <string name="practise_not_lang">That isn\'t a %1$s character</string>
+    <string name="language_name_yue">Cantonese</string>
+    <string name="language_name_cmn">Mandarin</string>
+    <string name="language_name_ja">Japanese</string>
+    <string name="language_name_ko">Korean</string>
     <string name="practise_mode">Practice Selector (tap a character to practice writing it)</string>
     <string name="practise_on_hint">Practice Selector: tap a character to choose from the characters on that page. Tap the pen to write again.</string>
     <string name="practise_miss">Tap right on a character</string>

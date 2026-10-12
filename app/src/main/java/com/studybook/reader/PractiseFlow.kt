@@ -55,6 +55,9 @@ class PractiseFlow(
             // A scanned page has no text layer: recognise the characters from the page image instead.
             val recognised = PdfText.practiceCharacters(glyphs).isEmpty()
             if (recognised) glyphs = recognisedPages[page] ?: recognisePage(page).also { recognisedPages[page] = it }
+            val own = ownChars()
+            val characters = PdfText.practiceCharacters(glyphs).filter(own::has)
+            if (characters.isEmpty()) return@launch noneInLanguage(R.string.practise_none_lang)
             val pressed = if (x != null && y != null) PdfText.glyphAt(glyphs, x, y, slop = 6f) else null
             if (x != null && pressed == null) {
                 Toast.makeText(activity, R.string.practise_miss, Toast.LENGTH_SHORT).show()
@@ -62,7 +65,7 @@ class PractiseFlow(
             }
             val preselected = pressed?.text?.let { practiceCharsIn(it) }.orEmpty().toSet()
             val scope = activity.getString(R.string.practise_from_page, page + 1, pdf.pageCount)
-            PracticePicker.show(activity, PdfText.practiceCharacters(glyphs), preselected, scope, recognised) { practise(it) }
+            PracticePicker.show(activity, characters, preselected, scope, recognised) { practise(it) }
         }
     }
 
@@ -90,6 +93,7 @@ class PractiseFlow(
             Toast.makeText(activity, R.string.practise_miss, Toast.LENGTH_SHORT).show()
             return
         }
+        if (!ownChars().has(tapped)) return noneInLanguage(R.string.practise_not_lang)
         val start = text.lastIndexOf('\n', offset - 1).let { if (it < 0) 0 else it + 1 }
         val end = text.indexOf('\n', offset).let { if (it < 0) text.length else it }
         PracticePicker.show(activity, practiceCharsIn(text.subSequence(start, end)), setOf(tapped),
@@ -100,8 +104,19 @@ class PractiseFlow(
     fun pickAllFromDocx() = PracticePicker.show(activity, practiceCharsIn(docxText.text), emptySet(),
         activity.getString(R.string.practise_from_document)) { practise(it) }
 
-    private fun practiceCharsIn(text: CharSequence): List<String> =
-        text.codePoints().toArray().map { String(Character.toChars(it)) }.filter(::isPracticeChar).distinct()
+    /** The characters in [text] that belong to the language being practised (others are never offered). */
+    private fun practiceCharsIn(text: CharSequence): List<String> {
+        val own = ownChars()
+        return text.codePoints().toArray().map { String(Character.toChars(it)) }.filter(own::has).distinct()
+    }
+
+    private fun ownChars() = LanguageChars.of(activity, Downloads.language(activity))
+
+    /** Says, naming the language being practised, that there's nothing in it to practise. */
+    private fun noneInLanguage(message: Int) {
+        val name = LanguageChars.name(activity, Downloads.language(activity))
+        Toast.makeText(activity, activity.getString(message, name), Toast.LENGTH_SHORT).show()
+    }
 
     /** Opens writing practice with a worksheet for these characters. */
     private fun practise(characters: List<String>) {
@@ -130,7 +145,7 @@ class PractiseFlow(
             val end = maxOf(docxText.selectionStart, docxText.selectionEnd).coerceAtLeast(0)
             val characters = practiceCharsIn(docxText.text.subSequence(start, end))
             if (characters.isEmpty()) {
-                Toast.makeText(activity, R.string.practise_no_chinese, Toast.LENGTH_SHORT).show()
+                noneInLanguage(R.string.practise_no_chinese)
             } else {
                 practise(characters)
             }
