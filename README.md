@@ -42,7 +42,7 @@ where it's shown here, search for it in the Settings search bar.
 
 | Setting | Where | Why |
 | --- | --- | --- |
-| **Install unknown apps** | Settings → Apps → Special app access → **Install unknown apps** → the browser or Files app you downloaded with → **Allow from this source** | Hok6 isn't on the Play Store, so Android blocks the APK otherwise. If **Play Protect** warns, tap **More details → Install anyway**. You can turn the setting off again afterwards. |
+| **Install unknown apps** | Settings → Apps → Special app access → **Install unknown apps** → the browser or Files app you downloaded with → **Allow from this source** | Android blocks an APK that isn't from the Play Store otherwise. If **Play Protect** warns, tap **More details → Install anyway**. You can turn the setting off again afterwards. |
 | **Voices** (text-to-speech) | Nothing to set if **Speech Services by Google** is installed (it is on most devices): Hok6 speaks with Google's engine itself, without changing the device's own voice setting, and says so once. With internet the voices work straight away, and Google's engine downloads them for offline use in the background. **Download all** opens Google's voice download (add the voice for each language you're learning, e.g. **Chinese (Hong Kong) / 粵語** for Cantonese) to get them sooner. | The 🔊 buttons and the **Sound → word** quiz speak with these voices. ⋮ → **Settings** → **Voices** switches between Google's engine and the device's own. |
 | **Internet (once)** | Wi-Fi on, then **Download all** on the welcome screen Hok6 shows the first time it opens (later: ⋮ → **Settings**, on the main screen or in Practice & Quiz) | Downloads the handwriting models for the languages you ticked and opens Google's voice download for any voice not yet on the device (or the Play Store, if Speech Services by Google isn't installed). The list ticks itself off when you come back. The dictionary is built in. After that Hok6 works offline. If you skip, **✍ Draw** in Practice & Quiz shows a **⬇ Download handwriting** button under the pad (no pop-up), and Hok6 offers a missing voice when it's needed (with **Don't remind me again**). |
 | **Auto-rotate** (optional) | Quick settings → **Auto-rotate** | Turn the tablet to portrait for a full page, landscape for wider worksheets. |
@@ -71,90 +71,36 @@ No Google account or Google Drive is needed: Hok6 keeps its backup as a file in 
 No other permissions are needed either: Hok6 only asks for access to the book folder you choose, and audio keeps
 playing with lock-screen controls without extra settings.
 
-## Using Hok6
-
-The [**User Guide**](USER_GUIDE.md) shows how to put your book on the device, do homework on the page, practice
-writing characters, quiz yourself, and keep your work backed up.
-
 ## Features
 
-- **Book folder → folders, as deep as you like.** Pick a folder; each folder in it is a card (sorted so "Chapter 2"
-  comes before "Chapter 10"), so it can hold one book's chapters or several books, with chapters or not. A folder
-  with folders in it opens as cards one level down (the path above it under the title); a folder of files opens as
-  a full-screen file list. Files directly in a folder that also has folders appear as "Files in book folder" or
-  "Files in this folder". A file opens full screen, and Back returns to the list.
-- **Favourite folders** (☆ on a card) are listed first, here and when moving files; they're in the backup.
-- **Organise files.** Long-press a file (or ⋮ → Move files…) to select files and move them to any folder of the book
-  (shown with its path), the book folder, or a new folder; tracing and the last page read move with them. ⋮ → New
-  folder… on the folder cards makes an empty folder there.
-- **Sized for the screen.** Text is a step bigger on small tablets and again on large ones (held further away than a
-  phone), on top of Android's font size setting, which Practice & Quiz follows too. Light or dark: the title bars
-  stay red (a deeper red in dark mode), with lighter red and file-type colours on dark backgrounds.
-- **PDF** pages rendered in the app, with zoom and remembered position; tap the page number to go to a page. Pages keep
-  their shape however you pinch and scroll, so tracing stays exactly where you wrote it.
-- **Word (.docx)** shown as text in the app, keeping headings, bold/italic, tables and ruby (pinyin/jyutping) annotations.
-  It's laid out like a page as wide as the screen's narrow side: pinch or − / + to zoom (the lines wrap the same way at
-  every zoom and when the device is turned, so tracing stays on its words), and two fingers scroll, sideways too.
-- **Audio** (mp3, m4a, wav, …) as a folder playlist with a player bar, speed control, repeat-one and lock-screen controls.
-- **Tracing** on PDFs and Word documents with finger or stylus, on as soon as a file opens (two fingers scroll and
-  zoom; on stylus devices a **✍ Stylus / ☝ Finger** toggle says whether fingers write too). The pen (tap it for the colours),
-  thickness (a drawer like the colours; its button shows the pen's line), eraser, **Clear** and zoom
-  are outlined buttons in the title bar, so nothing covers the page (**Clear** erases one page's tracing after asking,
-  with Undo in the message that follows); saved per page. ⋮ → **Save a copy with my tracing…** writes a new PDF with the tracing drawn into
-  the pages (as sharp lines) into the same folder, e.g. `completed_Homework.pdf`; it warns before replacing a file.
-- **Practice Selector** button on PDFs and Word documents: while it is on, tap a character to choose from the characters on that page (or Word paragraph), which the sheet says plainly, not the whole file; scanned pages are read with on-device text recognition; picking a pen colour goes back to writing.
-- **Practice & Quiz**: writing worksheets (Cantonese, Mandarin, Japanese and Korean):
-  - rows of practice squares (米 / 田 grid) with grey characters to trace, written on directly on the tablet;
-  - stroke order shown above each row, plus stroke-order animation, step-by-step strokes and a writing quiz for each character;
-  - Cantonese (Jyutping, Cantonese voice), Mandarin (Pinyin, Mandarin voice), Japanese (kanji, hiragana and katakana
-    with Japanese stroke order; the reading in kana and rōmaji, Japanese voice) or Korean (hangul, built stroke by
-    stroke from its letters, and hanja; Revised Romanization, letter by letter; Korean voice);
-  - pronunciation: hear each character and the word it belongs to, at 1×, 0.75× or 0.5× speed (tap the speed button next to 🔊), with tone names for Cantonese and Mandarin (e.g. nei5 · tone 5, low rising);
-  - type English to get words in the language you're practising, from offline dictionaries, shown right under the
-    practice box; **+ 普通話 / + 日本語 / + 한국어** toggles (remembered) add a row of words for each other language, and
-    tapping one of those switches to its language (adding it to your languages if needed);
-  - worksheet options folded under the Create button and kept from the last worksheet;
-  - **✏️ Practice writing** and **📝 Quiz** are separate tabs, so the two aren't mixed up;
-  - what to practice is **⌨ Typed** (characters, or English to look up) or **✍ Drawn** on a pad right in the form,
-    with 1 to 4 squares so a whole word can be written at once;
-  - outlined title bar tools, as on homework pages: the pen opens its colours, the thickness its drawer, eraser, **Clear** (Undo in the
-    message), the **✍ Stylus / ☝ Finger** toggle (under **⋮** on phones; in stylus mode a finger tap still opens a
-    stroke-order square), and zoom under **⋮** so every button keeps Android's full 48dp size;
-  - **Quiz**: on a homework page, tap **Practice Selector**, tap a character, choose characters and tap **Add to quiz**. Practice & Quiz → 📝 Quiz tab
-    then offers **flash cards** (word → meaning, English → word, or sound → word; you mark Knew it / Again)
-    or a **written quiz**: write the character from memory in a blank box, checked stroke by stroke (a hint after 3
-    misses, or **Show me**), prompted by its English meaning, its pronunciation, or the character itself, shown at the
-    top or hidden after a few seconds. Missed ones come back once at the end of the round; English meanings come from
-    the offline dictionary;
-  - **✍ Draw**: write a character on the pad and tap the recognised one to add it to the
-    worksheet (Google ML Kit handwriting recognition, on the device; needs internet once to download the Chinese model);
-  - history of practiced words and characters (with quiz results) and bookmarks in one list, each one tap away from a fresh
-    worksheet in the language it was practiced in; a toggle per language shows or hides its words, ✕ removes one
-    (with Undo), and Clear removes everything listed or only what's shown;
-  - your writing is kept for each word (the last 60 words written on), so it's still there when you practice that word
-    again; **Clear** erases everything on screen (the message offers Undo);
-  - export: print, or share a PDF (US Letter, 8.5 × 11 in, sharp lines and real text) with another app such as Gmail or
-    WhatsApp, blank or with your writing;
-  - on phones, one character at a time with big squares (detected automatically).
-- **About Hok6** (⋮ → About Hok6): the version, **Check for updates** (Google Play's in-app update, or the latest
-  GitHub release for an APK from there; only when tapped), links to the User Guide, privacy policy and source, device
-  tips and credits.
-- **Welcome screen and Settings**: the first time Hok6 opens it asks which languages you're learning (Cantonese,
-  Mandarin, Japanese, Korean, one or more; Settings can change them, and the downloads and Practice & Quiz follow),
-  then shows what it
-  needs from the internet (handwriting recognition and voices) with **Download all** and **Skip**. ⋮ → **Settings**
-  has the same list any time (a voice that so far only works online is marked as such), which voice engine to speak
-  with, the download reminders switch, light or dark, and the welcome screen again.
-- **Light or dark**: ⋮ → **Settings** → *Same as the tablet* (the default), *Light* or *Dark*;
-  Practice & Quiz follows it too. While Hok6 starts (and while Practice & Quiz loads) a splash shows its name, tag
-  line and a progress bar.
-- **Your work is backed up, on the device**: Practice & Quiz history, bookmarks and writing, the quiz and tracing are
-  kept in the app's own storage and copied to `Hok6 backup.json` in the book folder whenever a screen is left after a
-  change (the file is hidden from the chapter's file list). It survives uninstalling; choosing the book folder after
-  reinstalling offers to restore it. Nothing goes to Google Drive (Android's cloud backup is turned off for Hok6),
-  but moving to a new device by cable or Wi-Fi brings it along. **Back up my work…** / **Restore my work…**
-  (main screen menu, or under History in Practice & Quiz) save a copy anywhere, or restore any backup file.
-  Restoring adds to what's there: history, bookmarks and the quiz are combined.
+The [**User Guide**](USER_GUIDE.md) shows how to use all of this step by step.
+
+- **Your book as folders.** Pick a book folder; each folder in it is a card, as deep as you like, sorted so
+  "Chapter 2" comes before "Chapter 10". Favourite folders (☆) come first, and files can be moved between folders.
+- **PDF, Word and audio.** PDFs with zoom, remembered position and go to page; Word (.docx) as text with headings,
+  tables and ruby (pinyin/jyutping) annotations; audio as a folder playlist with speed, repeat-one and lock-screen
+  controls.
+- **Tracing** on PDF and Word pages with finger or stylus, saved per page; on stylus devices a **✍ Stylus / ☝ Finger**
+  toggle says whether fingers write too. **Clear** asks first and offers Undo, and ⋮ → **Save a copy with my
+  tracing…** writes a new PDF with the tracing drawn in.
+- **Practice Selector:** tap a character on a page to practice it or add it to the quiz; scanned pages are read with
+  on-device text recognition.
+- **Practice & Quiz** for Cantonese (Jyutping), Mandarin (Pinyin), Japanese (kana and rōmaji) and Korean (Revised
+  Romanization):
+  - writing worksheets with 米 / 田 grids, grey characters to trace and stroke order above each row, printed or shared
+    as a US Letter PDF, blank or with your writing;
+  - stroke-order animation, step-by-step strokes, a writing quiz and voices (at 1×, 0.75× or 0.5×) for each character;
+  - type English to find words in offline dictionaries, or **✍ Draw** a character (on-device handwriting recognition);
+  - **📝 Quiz**: flash cards, or a written quiz checked stroke by stroke;
+  - a history of practiced words and bookmarks, each one tap from a fresh worksheet.
+- **Welcome screen and Settings:** choose the languages you're learning, download handwriting models and voices once,
+  and pick the voice engine and light or dark.
+- **Sized for the screen:** text steps up on tablets, on top of Android's font size; phones show one character at a
+  time with big squares.
+- **Your work stays on the device:** saved in the app and copied to `Hok6 backup.json` in the book folder, so it
+  survives reinstalling; nothing goes to Google Drive. **Back up my work…** / **Restore my work…** save or restore a
+  copy anywhere.
+- **About Hok6:** the version, **Check for updates** (only when tapped), the User Guide, privacy policy and credits.
 
 ## Building
 
@@ -183,12 +129,11 @@ puts a version already uploaded on another track). It needs a Google Cloud servi
 Console with release permissions for Hok6; its JSON key stays outside the repo, in
 `~/.config/hok6/play-service-account.json`. See the top of the script for setting it up.
 
-`test/` is a local sample book folder used for testing; it is excluded from git.
-
 ### Character data
 
-`app/src/main/assets/hanzi.bin` (stroke data, one file) and `app/src/main/assets/training/readings/`
-(Jyutping/Pinyin for 46,000+ characters) are generated from their sources by:
+The stroke data (`hanzi.bin`, `kanji.bin`, `hanja.bin` in `app/src/main/assets/`), the readings
+(`training/readings/`) and the dictionaries (`training/dict/`, `dict-ja/`, `dict-ko/`) are generated from their
+sources by:
 
 ```bash
 python3 tools/build_assets.py
@@ -196,9 +141,8 @@ python3 tools/build_assets.py
 
 ## Testing
 
-Quick tests (no device needed, about a minute): Kotlin unit tests for chapter sorting, file types, Word reading,
-finding the character under a tap, the stroke data bundle, backups, and tracing loading back exactly as it was saved; JavaScript tests (Node.js) for the assembled Cantonese
-characters, tone names and readings.
+Quick tests (no device needed, about a minute): Kotlin unit tests for the app's file handling, backups and tracing,
+and JavaScript tests (Node.js) for stroke data, readings, dictionaries and worksheets in all four languages.
 
 ```bash
 tools/run_tests.sh
@@ -206,12 +150,11 @@ tools/run_tests.sh
 
 ### Checking on a device
 
-`tools/device_check.py` installs "Hok6 (test)", copies `test/` to `Download/StudyBookCheck` on the device and
-checks, with no taps needed: chapters in order, a chapter's files, opening a PDF, Practice writing from the PDF, the
-stroke order panel, saving and sharing a US Letter PDF, writing on worksheets (finger and stylus), English lookup,
-that pinching while dragging a PDF doesn't stretch its pages, going to a page by its number, tracing on a PDF page
-being saved, Clear asking first and Undo bringing the tracing back, and saving a copy with the tracing. Gestures with more than one finger are played by
-`TestGestures`, which is only in the test build (`app/src/debug/`). Screenshots go to `build/device-check/`. If no device is connected
+`tools/device_check.py` installs "Hok6 (test)", copies `test/` (a local book folder, not in the repository) to
+`Download/StudyBookCheck` on the device and goes through the main screens with no taps needed: the book's folders
+and files, PDF pages, tracing, Clear and Undo, saving a copy with the tracing, Practice & Quiz worksheets (finger
+and stylus), English lookup and the US Letter PDF. Gestures with more than one finger are played by `TestGestures`,
+which is only in the test build (`app/src/debug/`). Screenshots go to `build/device-check/`. If no device is connected
 and ready, it starts the emulator instead and shuts it down afterwards (`--emulator` forces this, `--avd NAME`
 chooses which).
 
@@ -261,8 +204,6 @@ The data and libraries it bundles keep their own licenses (listed under Credits 
   fallback Jyutping from the Unicode Unihan database (Unicode License V3,
   [UNICODE-LICENSE.txt](app/src/main/assets/training/UNICODE-LICENSE.txt)), and Japanese and Korean readings of kanji
   and hanja from KANJIDIC2 (CC BY-SA 4.0).
-
-`test/` (a personal textbook used for testing) is not part of the repository.
 
 ## Credits
 
