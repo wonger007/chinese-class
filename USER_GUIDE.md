@@ -6,8 +6,9 @@ How to use Hok6: Trace, Write and Learn once it's installed. Parts 1â€“3 and 6â€
 parts 4 and 5 are extra practice for languages written with characters (Cantonese, Mandarin, Japanese, Korean). To
 install it and set up the tablet, see [Install](README.md#install) in the README.
 
-Hok6 has been tested only on a **Samsung Galaxy Tab S7 FE** (Android 14) and a **Razer Edge** (Android 12, which
-uses the phone layout). It should work on other devices with Android 8.0 or newer, but they haven't been tried.
+Hok6 has been tested only on a **Samsung Galaxy Tab S7 FE** (Android 14), a **Razer Edge** (Android 12, which
+uses the phone layout) and a **Samsung Galaxy S25 Ultra** (Android 17). It should work on other devices with
+Android 8.0 or newer, but they haven't been tried.
 
 **Contents**
 
