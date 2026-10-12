@@ -348,4 +348,11 @@ test('a word belongs to a language when each character has a reading in it', () 
   assert.ok(!Core.inLanguage('谢', table, 'ko'));
   assert.ok(!Core.inLanguage('学校ありがとう', table, 'yue'));
   assert.ok(!Core.inLanguage('학교', table, 'ja'));
+  // Cantonese is traditional: simplified-only characters (training/simplified.txt) are left out unless allowed ('').
+  const simplifiedOnly = fs.readFileSync(path.join(ASSETS, 'training', 'simplified.txt'), 'utf8');
+  assert.ok(!Core.inLanguage('谢', table, 'yue', simplifiedOnly));
+  assert.ok(!Core.inLanguage('学校', table, 'yue', simplifiedOnly));
+  assert.ok(Core.inLanguage('學校', table, 'yue', simplifiedOnly));
+  assert.ok(Core.inLanguage('谢', table, 'yue', ''));
+  assert.ok(Core.inLanguage('谢', table, 'cmn', simplifiedOnly));
 });

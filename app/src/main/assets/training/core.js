@@ -59,10 +59,12 @@
   }
 
   /* Whether a word belongs to a language: kana are Japanese and hangul Korean (marks such as ー and っ included), and a
-     Han character needs a reading in the language (so 谢 isn't Japanese or Korean). Words that don't are never
-     practised in that language, so languages aren't mixed. */
-  function inLanguage(word, table, lang) {
-    return Array.from(word).every((ch) => isPracticeChar(ch, lang) && (!HAN.test(ch) || readingsIn(table[ch], lang).length > 0));
+     Han character needs a reading in the language (so 谢 isn't Japanese or Korean). Cantonese is written in traditional
+     characters: those in `simplifiedOnly` (training/simplified.txt) are left out unless it's empty (the "simplified
+     characters too" setting). Words that don't belong are never practised in that language, so languages aren't mixed. */
+  function inLanguage(word, table, lang, simplifiedOnly = '') {
+    return Array.from(word).every((ch) => isPracticeChar(ch, lang) && (!HAN.test(ch)
+      || (readingsIn(table[ch], lang).length > 0 && !(lang === 'yue' && simplifiedOnly.includes(ch)))));
   }
 
   // ---------------------------------------------------------------- Japanese: kana → rōmaji (Hepburn)

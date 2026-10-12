@@ -169,7 +169,9 @@ privacy policy and the source, and the device tips and credits.
 Main screen ⋮ → **Settings**:
 
 - **Languages**: tick the languages you're learning (Cantonese, Mandarin, Japanese, Korean, one or more; the welcome screen asks the
-  first time). Hok6 gets the handwriting recognition and voice for each one ticked.
+  first time). Hok6 gets the handwriting recognition and voice for each one ticked. Cantonese is written in traditional
+  characters, so simplified ones (学, 谢) are left out of it; tick **Simplified characters too** under Cantonese to
+  let them in.
 - **Downloads**: the handwriting models and voices for those languages, with **Download all**. Needed once, with
   internet; after that Hok6 works offline.
 - **Voices**: which engine Hok6 speaks with: Google's (recommended; it has voices for all four) or the device's

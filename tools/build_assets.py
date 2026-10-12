@@ -347,6 +347,19 @@ def build_dictionary():
         e.append(max(level.get(c, 9) for c in e[0]))
 
     write_dictionary("dict", entries, index)
+    write_simplified(entries)
+
+
+def write_simplified(entries):
+    """training/simplified.txt: the characters only ever written in simplified Chinese (学, 谢): in a simplified headword
+    where the traditional one differs, and in no traditional headword. Cantonese leaves them out unless its
+    "simplified characters too" setting is on."""
+    traditional = {c for e in entries for c in e[0]}
+    simplified = {s for e in entries if len(e[0]) == len(e[1]) for t, s in zip(e[0], e[1]) if t != s}
+    chars = "".join(sorted(simplified - traditional))
+    with open(os.path.join(TRAINING, "simplified.txt"), "w", encoding="utf-8") as out:
+        out.write(chars)
+    print(f"simplified.txt: {len(chars)} characters")
 
 
 def write_dictionary(name, entries, index):

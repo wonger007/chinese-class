@@ -14,6 +14,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.isVisible
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -146,6 +147,7 @@ object Downloads {
         else -> R.string.cantonese
     })
     private const val KEY_LANGS = "langs"
+    private const val KEY_YUE_SIMPLIFIED = "yueSimplified"
     private const val KEY_LANG = "lang"
     private const val KEY_SETUP_DONE = "setup_done"
     private const val KEY_NO_REMIND = "no_download_reminders"
@@ -179,6 +181,14 @@ object Downloads {
         val learned = languages(context)
         return TrainingStore(context).get(KEY_LANG)?.trim('"')?.takeIf { it in learned } ?: learned.first()
     }
+
+    /**
+     * Whether Cantonese takes simplified characters too (学, 谢), as well as traditional; off at first. Kept with writing
+     * practice's data (JSON true or false), which reads it as "yueSimplified".
+     */
+    fun yueSimplified(context: Context) = TrainingStore(context).get(KEY_YUE_SIMPLIFIED) == "true"
+
+    fun setYueSimplified(context: Context, on: Boolean) = TrainingStore(context).set(KEY_YUE_SIMPLIFIED, on.toString())
 
     fun setLanguages(context: Context, langs: List<String>) =
         TrainingStore(context).set(KEY_LANGS, JSONArray(LANGS.filter { it in langs }).toString())
@@ -251,9 +261,15 @@ fun bindLanguageChoice(box: View, onChange: () -> Unit) {
     val saved = Downloads.languages(context)
     boxes.forEach { (lang, b) -> b.isChecked = lang in saved }
     lockLast()
+    // Cantonese in simplified characters too: under Cantonese, only while it's ticked.
+    val simplified = box.findViewById<CheckBox>(R.id.lang_yue_simplified)
+    simplified.isChecked = Downloads.yueSimplified(context)
+    simplified.isVisible = boxes.getValue("yue").isChecked
+    simplified.setOnCheckedChangeListener { _, on -> Downloads.setYueSimplified(context, on) }
     boxes.values.forEach { b ->
         b.setOnCheckedChangeListener { _, _ ->
             lockLast()
+            simplified.isVisible = boxes.getValue("yue").isChecked
             Downloads.setLanguages(context, boxes.filterValues { it.isChecked }.keys.toList())
             onChange()
         }

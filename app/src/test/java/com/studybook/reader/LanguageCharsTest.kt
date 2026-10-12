@@ -10,7 +10,7 @@ import java.io.File
 
 /** The Practice Selector's language filter, on the readings in src/main/assets/training/readings. */
 class LanguageCharsTest {
-    private fun chars(lang: String) = LanguageChars(lang) { id ->
+    private fun chars(lang: String, simplifiedOnly: String = "") = LanguageChars(lang, simplifiedOnly) { id ->
         File("src/main/assets/training/readings/${id.toString(16)}.json").takeIf { it.isFile }?.let { JSONObject(it.readText()) }
     }
 
@@ -31,6 +31,14 @@ class LanguageCharsTest {
         assertFalse(yue.has("あ"))
         assertFalse(yue.has("학"))
         assertFalse(chars("cmn").has("A"))
+        // Cantonese is traditional: simplified-only characters are left out unless the setting lets them in ("").
+        val simplifiedOnly = File("src/main/assets/training/simplified.txt").readText()
+        assertFalse(chars("yue", simplifiedOnly).has("谢"))
+        assertFalse(chars("yue", simplifiedOnly).has("学"))
+        assertTrue(chars("yue", simplifiedOnly).has("後"))
+        assertTrue(chars("yue", simplifiedOnly).has("后"))
+        assertTrue(chars("yue").has("谢"))
+        assertTrue(chars("cmn", simplifiedOnly).has("谢"))
     }
 
     @Test

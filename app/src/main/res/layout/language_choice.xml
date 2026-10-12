@@ -13,6 +13,15 @@
         android:text="@string/language_yue"
         android:textSize="@dimen/text_body" />
 
+    <!-- Cantonese is written in traditional characters; this lets it take simplified ones too. -->
+    <CheckBox
+        android:id="@+id/lang_yue_simplified"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginStart="32dp"
+        android:text="@string/language_yue_simplified"
+        android:textSize="@dimen/text_body" />
+
     <CheckBox
         android:id="@+id/lang_cmn"
         android:layout_width="match_parent"

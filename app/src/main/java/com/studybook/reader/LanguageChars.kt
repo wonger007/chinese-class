@@ -7,10 +7,16 @@ import java.util.concurrent.ConcurrentHashMap
 /**
  * Which characters belong to a language, as writing practice decides it (core.js inLanguage): kana are Japanese and
  * hangul Korean, and a Han character needs a reading in the language in writing practice's readings
- * (assets/training/readings, "Jyutping|Pinyin|Japanese|Korean" per character, in files of 1024 code points). So the
- * Practice Selector lists only the language being practised, and languages are never mixed.
+ * (assets/training/readings, "Jyutping|Pinyin|Japanese|Korean" per character, in files of 1024 code points). Cantonese
+ * is written in traditional characters, so [simplifiedOnly] (assets/training/simplified.txt) are left out of it unless
+ * Settings' "simplified characters too" is on. So the Practice Selector lists only the language being practised, and
+ * languages are never mixed.
  */
-class LanguageChars(private val lang: String, private val shard: (Int) -> JSONObject?) {
+class LanguageChars(
+    private val lang: String,
+    private val simplifiedOnly: String = "",
+    private val shard: (Int) -> JSONObject?,
+) {
 
     fun has(ch: String): Boolean {
         val cp = ch.codePointAt(0)
@@ -20,7 +26,7 @@ class LanguageChars(private val lang: String, private val shard: (Int) -> JSONOb
             Character.UnicodeScript.HAN -> {
                 val field = FIELDS.indexOf(lang)
                 val readings = shard(cp shr SHARD_BITS)?.optString(ch).orEmpty().split('|')
-                field >= 0 && readings.getOrNull(field).orEmpty().isNotBlank()
+                field >= 0 && readings.getOrNull(field).orEmpty().isNotBlank() && !(lang == "yue" && ch in simplifiedOnly)
             }
             else -> false
         }
@@ -32,8 +38,13 @@ class LanguageChars(private val lang: String, private val shard: (Int) -> JSONOb
         private const val SHARD_BITS = 10
         private val shards = ConcurrentHashMap<Int, JSONObject>()
 
-        /** For [lang], reading the app's own readings files (each loaded once). */
-        fun of(context: Context, lang: String) = LanguageChars(lang) { id ->
+        private var simplified: String? = null
+
+        /** For [lang], reading the app's own readings files (each loaded once), and the simplified-only characters. */
+        fun of(context: Context, lang: String) = LanguageChars(lang,
+            if (lang != "yue" || Downloads.yueSimplified(context)) "" else simplified ?: runCatching {
+                context.assets.open("training/simplified.txt").bufferedReader().use { it.readText() }
+            }.getOrDefault("").also { simplified = it }) { id ->
             shards[id] ?: runCatching {
                 JSONObject(context.assets.open("training/readings/${id.toString(16)}.json").bufferedReader().use { it.readText() })
             }.getOrNull()?.also { shards[id] = it }

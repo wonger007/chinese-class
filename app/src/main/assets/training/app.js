@@ -1470,8 +1470,18 @@ function createWorksheet(title, chars, words, opts) {
 
 /* The words that belong to the language being practised (Core.inLanguage); others are left out, never mixed in. */
 async function ownWords(words) {
-  const table = await loadReadings(words.join(''));
-  return words.filter((w) => Core.inLanguage(w, table, state.lang));
+  const [table, simplified] = await Promise.all([loadReadings(words.join('')), simplifiedLeftOut()]);
+  return words.filter((w) => Core.inLanguage(w, table, state.lang, simplified));
+}
+
+/* The characters only written in simplified Chinese (training/simplified.txt), which Cantonese leaves out; none when
+   Settings' "Cantonese: simplified characters too" (yueSimplified) is on. */
+let simplifiedChars = null;
+async function simplifiedLeftOut() {
+  storeCache.delete('yueSimplified');
+  if (state.lang !== 'yue' || store.get('yueSimplified', false)) return '';
+  if (simplifiedChars === null) simplifiedChars = await fetch('simplified.txt').then((r) => (r.ok ? r.text() : ''), () => '');
+  return simplifiedChars;
 }
 
 /* Says how many words were left out for not being in the language (counted, not shown, so they aren't mixed in). */
@@ -2195,9 +2205,9 @@ window.inkResult = async function inkResult(id, result) {
   // A word comes back with spaces between its characters sometimes; they aren't part of it. Only words of the
   // language being practised are offered (Core.inLanguage), so writing another language's isn't recognised.
   const words = result.candidates.map((t) => t.replace(/\s+/g, '')).filter((t) => t && Array.from(t).every(isHan));
-  const table = await loadReadings(words.join(''));
+  const [table, simplified] = await Promise.all([loadReadings(words.join('')), simplifiedLeftOut()]);
   if (id !== hand.request || $('drawArea').hidden) return;
-  const own = [...new Set(words)].filter((w) => Core.inLanguage(w, table, state.lang));
+  const own = [...new Set(words)].filter((w) => Core.inLanguage(w, table, state.lang, simplified));
   status.textContent = !hand.strokes.length ? padHint()
     : own.length ? 'Tap the right one:' : `Not recognised as ${langInfo().name}: try writing it again.`;
   const out = $('hCands');
