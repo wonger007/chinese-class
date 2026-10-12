@@ -332,9 +332,10 @@ function showStrokeNote(chars) {
       'tab); Hong Kong\'s differs for some characters.');
   } else if (state.lang === 'yue') {
     const hk = chars.filter((c) => state.data[c] && state.data[c].hk);
-    parts.push((hk.length ? `${hk.join(' ')} ${hk.length > 1 ? 'are' : 'is'} in Hong Kong's stroke order. ` : '') +
-      'Hok6 has Hong Kong\'s order only for the characters where it\'s been checked; the others follow mainland ' +
-      'China\'s standard, which differs for some characters, so check your textbook or teacher where they disagree.');
+    parts.push('Stroke order follows Hong Kong\'s standard, checked against the Education Bureau\'s Lexical Lists for ' +
+      'Chinese Learning in Hong Kong' + (hk.length ? ` (${hk.join(' ')} ${hk.length > 1 ? 'differ' : 'differs'} from mainland ` +
+      'China\'s)' : '') + '. Some characters it couldn\'t be matched for follow mainland China\'s standard; check ' +
+      'your textbook or teacher where they disagree.');
   }
   if (none.length) {
     parts.push(`No ${lang} stroke order data for ${none.join(' ')}, so ${none.length > 1 ? 'they are' : 'it is'} ` +

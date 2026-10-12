@@ -134,8 +134,9 @@ and pinyin/jyutping above characters. Zooming doesn't re-wrap the lines, so trac
   the language's own data, never another language's: Korean has stroke order for hangul and for the hanja learned
   first, so most other hanja (and a few rare characters in other languages) are shown without it, and the worksheet
   says so. For Cantonese, **Stroke order: Hong Kong / Mainland China** on the **✏️ Practice writing** tab (also in
-  ⋮ → **Settings** → **Languages**) chooses whose order to follow. **Hong Kong** (the default) uses Hong Kong's order
-  for the characters Hok6 has it for, and mainland China's for the rest; the worksheet says which. Mandarin always
+  ⋮ → **Settings** → **Languages**) chooses whose order to follow. **Hong Kong** (the default) follows Hong Kong's
+  order, checked against the Education Bureau's Lexical Lists for Chinese Learning in Hong Kong; characters it
+  couldn't be matched for keep mainland China's (about one in five of the list). The worksheet says which characters differ from mainland China's. Mandarin always
   follows mainland China's order, its own standard. Follow your textbook or teacher where they disagree.
 
 On a phone, worksheets show one character at a time with big squares.

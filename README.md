@@ -90,7 +90,7 @@ The [**User Guide**](USER_GUIDE.md) shows how to use all of this step by step.
   - writing worksheets with guide lines, grey characters to trace and stroke order above each row, printed or shared
     as a US Letter PDF, blank or with your writing;
   - stroke-order animation, step-by-step strokes, a writing quiz and voices (at 1×, 0.75× or 0.5×) for each character
-    (Cantonese and Mandarin in mainland China's stroke order, as no openly licensed Hong Kong stroke data exists);
+    (Mandarin in mainland China's stroke order; Cantonese in Hong Kong's, or mainland China's if you choose);
   - type English to find words in offline dictionaries, or **✍ Draw** a character (on-device handwriting recognition);
   - **📝 Quiz**: flash cards, or a written quiz checked stroke by stroke;
   - a history of practiced words and bookmarks, each one tap from a fresh worksheet.
@@ -229,6 +229,7 @@ This project builds on, bundles data from, or was modelled on the following proj
 | [garfieldnate/kengdic](https://github.com/garfieldnate/kengdic) | English → Korean dictionary (bundled in `training/dict-ko/`) | MPL 2.0 (or LGPL 2.0+) |
 | [Google ML Kit Text Recognition v2](https://developers.google.com/ml-kit/vision/text-recognition/v2) (Chinese, Japanese, Korean) | Recognising characters on scanned PDF pages that have no text layer (on-device, bundled models) | [ML Kit Terms](https://developers.google.com/ml-kit/terms) |
 | [Google ML Kit Digital Ink Recognition](https://developers.google.com/ml-kit/vision/digital-ink-recognition) | **✍ Draw** in Practice & Quiz: recognising handwritten characters (on-device; each language's model downloads once) | [ML Kit Terms](https://developers.google.com/ml-kit/terms) |
+| [Lexical Lists for Chinese Learning in Hong Kong](https://www.edbchinese.hk/lexlist_ch/) (香港小學學習字詞表, Education Bureau) | Reference for Hong Kong stroke order: `training/hk-order.json` lists, for the characters where Hong Kong's order differs from the stroke data's, Hok6's own strokes in Hong Kong's order. No graphics or data of the Bureau's are included. | © HKSAR Government; used as a reference |
 | [Google Play In-App Updates](https://developer.android.com/guide/playcore/in-app-updates) | **Check for updates** on the About page, for Hok6 installed from Google Play | [Play Core Software Development Kit Terms](https://developer.android.com/guide/playcore#license) |
 
 Colloquial Cantonese characters that are not in the stroke data (e.g. 咗, 佢, 哋, 喺) are assembled from their components by this app; those are marked ≈ and their stroke order is an approximation.
