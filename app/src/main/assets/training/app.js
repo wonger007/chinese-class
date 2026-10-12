@@ -1202,6 +1202,8 @@ function showRadicalButton() {
   b.classList.toggle('sel', on);
   b.setAttribute('aria-pressed', String(on));
   b.textContent = on ? 'Radical: green' : 'Radical';
+  // What the green means, under the box while it's shown.
+  $('pRadicalNote').hidden = b.hidden || !on;
 }
 
 /* The 米 guide and border behind a Hanzi Writer box (the practice panel's, or the quiz's). */
