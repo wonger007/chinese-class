@@ -31,7 +31,8 @@ class PractiseFlow(
     /** Characters and their positions on each page of the open PDF, read in the background. */
     private var pdfGlyphs: Deferred<List<List<PdfGlyph>>>? = null
     /** Characters recognised from the images of scanned pages (pages with no text), by page. */
-    private val recognisedPages = HashMap<Int, List<PdfGlyph>>()
+    /** What each recogniser read on a scanned page (PdfOcr.readAll), by page. */
+    private val recognisedPages = HashMap<Int, Map<String, List<PdfGlyph>>>()
 
     /** Forgets the last file's characters; called whenever another file is opened. */
     fun reset() {
@@ -54,7 +55,14 @@ class PractiseFlow(
             var glyphs = glyphsJob.await().getOrNull(page).orEmpty()
             // A scanned page has no text layer: recognise the characters from the page image instead.
             val recognised = PdfText.practiceCharacters(glyphs).isEmpty()
-            if (recognised) glyphs = recognisedPages[page] ?: recognisePage(page).also { recognisedPages[page] = it }
+            if (recognised) {
+                val reads = recognisedPages[page] ?: recognisePage(page).also { recognisedPages[page] = it }
+                // Only a page in the language being practised is offered, read by that language's recogniser.
+                val want = LanguageChars.script(Downloads.language(activity))
+                val pageScript = LanguageChars.pageScript(reads.mapValues { PdfText.practiceCharacters(it.value) })
+                if (pageScript != null && pageScript != want) return@launch noneInLanguage(R.string.practise_page_not_lang)
+                glyphs = reads[want].orEmpty()
+            }
             val own = ownChars()
             val characters = PdfText.practiceCharacters(glyphs).filter(own::has)
             if (characters.isEmpty()) return@launch noneInLanguage(R.string.practise_none_lang)
@@ -69,15 +77,15 @@ class PractiseFlow(
         }
     }
 
-    /** Runs on-device text recognition on a rendered PDF page. */
-    private suspend fun recognisePage(page: Int): List<PdfGlyph> {
-        val widthPoints = pdf.pageWidthPoints(page) ?: return emptyList()
+    /** Runs on-device text recognition on a rendered PDF page, with every recogniser (see [PdfOcr.readAll]). */
+    private suspend fun recognisePage(page: Int): Map<String, List<PdfGlyph>> {
+        val widthPoints = pdf.pageWidthPoints(page) ?: return emptyMap()
         Toast.makeText(activity, R.string.recognising, Toast.LENGTH_SHORT).show()
         val pixels = 2000
         val bitmap = suspendCancellableCoroutine<Bitmap?> { cont -> pdf.renderPage(page, pixels) { cont.resume(it) } }
-            ?: return emptyList()
+            ?: return emptyMap()
         return try {
-            PdfOcr.recognise(bitmap, widthPoints.toFloat() / pixels, listOf(Downloads.language(activity)))
+            PdfOcr.readAll(bitmap, widthPoints.toFloat() / pixels)
         } finally {
             bitmap.recycle()
         }

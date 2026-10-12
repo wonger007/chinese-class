@@ -39,6 +39,26 @@ class LanguageChars(private val lang: String, private val shard: (Int) -> JSONOb
             }.getOrNull()?.also { shards[id] = it }
         }
 
+        /** The script a language is written and recognised in: "zh" for Cantonese and Mandarin, else its own. */
+        fun script(lang: String): String = if (lang == "ja" || lang == "ko") lang else "zh"
+
+        /**
+         * The language a scanned page is in, from what each recogniser read on it (characters by script, as
+         * [PdfOcr.readAll]): the read that found the most characters, then Korean if a fifth of them are hangul,
+         * Japanese if a fifth are kana (a stray misread kana on a Chinese page isn't enough), else Chinese. Null when
+         * nothing was read.
+         */
+        fun pageScript(reads: Map<String, List<String>>): String? {
+            val best = reads.values.maxByOrNull { it.size }?.takeIf { it.isNotEmpty() } ?: return null
+            fun share(vararg scripts: Character.UnicodeScript) =
+                best.count { Character.UnicodeScript.of(it.codePointAt(0)) in scripts }.toFloat() / best.size
+            return when {
+                share(Character.UnicodeScript.HANGUL) >= 0.2f -> "ko"
+                share(Character.UnicodeScript.HIRAGANA, Character.UnicodeScript.KATAKANA) >= 0.2f -> "ja"
+                else -> "zh"
+            }
+        }
+
         /** The language's name in English, the language every screen shares. */
         fun name(context: Context, lang: String): String = context.getString(when (lang) {
             "cmn" -> R.string.language_name_cmn

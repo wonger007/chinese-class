@@ -122,8 +122,8 @@ and pinyin/jyutping above characters. Zooming doesn't re-wrap the lines, so trac
   **Mandarin**, **Japanese**, **Korean**), switch between them at the top. Languages are never mixed: History, the
   quiz and the English look-up show only the language you're practising, alongside English. Words typed (or picked on
   a page) that aren't in that language, such as 谢 while practising Korean, are left out, and the message says how
-  many. Recognition works in that language alone too: **✍ Draw** offers only its words, and scanned pages are read
-  as that language. Typing kana or hangul
+  many. Recognition works in that language alone too: **✍ Draw** offers only its words, **Practice Selector** lists
+  only its characters, and a scanned page in another language isn't offered at all (the message says so). Typing kana or hangul
   switches to Japanese or Korean by itself. On a worksheet, the switch also writes each word the way that language
   does (学校 becomes 學校 in Cantonese and 학교 in Korean), with its own stroke order; a word that language doesn't
   have is left out (the message says how many), and switching back brings it back. Stroke order only ever comes from

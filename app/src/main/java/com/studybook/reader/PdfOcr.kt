@@ -12,30 +12,19 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
 /**
- * On-device text recognition (Google ML Kit) for scanned PDF pages that have no text layer: Chinese, Japanese or
- * Korean, in the language being practised (PractiseFlow passes just that one). Results use the same [PdfGlyph] boxes
- * as real PDF text, so taps work the same way.
+ * On-device text recognition (Google ML Kit) for scanned PDF pages that have no text layer. Every recogniser
+ * (Chinese, Japanese, Korean) reads the page, so the page's language can be told (LanguageChars.pageScript); only
+ * the read of the language being practised is ever offered. Results use the same [PdfGlyph] boxes as real PDF text,
+ * so taps work the same way.
  */
 object PdfOcr {
     private val chinese by lazy { TextRecognition.getClient(ChineseTextRecognizerOptions.Builder().build()) }
     private val japanese by lazy { TextRecognition.getClient(JapaneseTextRecognizerOptions.Builder().build()) }
     private val korean by lazy { TextRecognition.getClient(KoreanTextRecognizerOptions.Builder().build()) }
 
-    /**
-     * Recognises the characters in [bitmap]; [pointsPerPixel] converts bitmap pixels to PDF points. With more than one
-     * script among [languages], each is tried and the reading that finds the most characters to practise is kept.
-     */
-    suspend fun recognise(bitmap: Bitmap, pointsPerPixel: Float, languages: List<String>): List<PdfGlyph> {
-        val recognizers = languages.map {
-            when (it) {
-                "ja" -> japanese
-                "ko" -> korean
-                else -> chinese
-            }
-        }.distinct()
-        return recognizers.map { recognise(it, bitmap, pointsPerPixel) }
-            .maxByOrNull { glyphs -> PdfText.practiceCharacters(glyphs).size }.orEmpty()
-    }
+    /** Reads [bitmap] with each recogniser; [pointsPerPixel] converts bitmap pixels to PDF points. Keyed "zh", "ja", "ko". */
+    suspend fun readAll(bitmap: Bitmap, pointsPerPixel: Float): Map<String, List<PdfGlyph>> =
+        mapOf("zh" to chinese, "ja" to japanese, "ko" to korean).mapValues { recognise(it.value, bitmap, pointsPerPixel) }
 
     private suspend fun recognise(recognizer: TextRecognizer, bitmap: Bitmap, pointsPerPixel: Float): List<PdfGlyph> =
         suspendCancellableCoroutine { cont ->
