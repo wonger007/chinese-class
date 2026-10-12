@@ -89,7 +89,8 @@ The [**User Guide**](USER_GUIDE.md) shows how to use all of this step by step.
   Romanization):
   - writing worksheets with guide lines, grey characters to trace and stroke order above each row, printed or shared
     as a US Letter PDF, blank or with your writing;
-  - stroke-order animation, step-by-step strokes, a writing quiz and voices (at 1×, 0.75× or 0.5×) for each character;
+  - stroke-order animation, step-by-step strokes, a writing quiz and voices (at 1×, 0.75× or 0.5×) for each character
+    (Cantonese and Mandarin in mainland China's stroke order, as no openly licensed Hong Kong stroke data exists);
   - type English to find words in offline dictionaries, or **✍ Draw** a character (on-device handwriting recognition);
   - **📝 Quiz**: flash cards, or a written quiz checked stroke by stroke;
   - a history of practiced words and bookmarks, each one tap from a fresh worksheet.

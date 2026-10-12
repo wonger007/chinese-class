@@ -129,7 +129,9 @@ and pinyin/jyutping above characters. Zooming doesn't re-wrap the lines, so trac
   have is left out (the message says how many), and switching back brings it back. Stroke order only ever comes from
   the language's own data, never another language's: Korean has stroke order for hangul and for the hanja learned
   first, so most other hanja (and a few rare characters in other languages) are shown without it, and the worksheet
-  says so.
+  says so. Cantonese and Mandarin stroke order follows mainland China's standard; Hong Kong's differs for some
+  characters (no openly licensed Hong Kong stroke data exists), so Cantonese worksheets say so: follow your textbook
+  or teacher where they disagree.
 
 On a phone, worksheets show one character at a time with big squares.
 

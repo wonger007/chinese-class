@@ -289,16 +289,24 @@ async function renderPages() {
 }
 
 /* Says which characters on the worksheet have no stroke order data in the language (most Korean hanja; a few rare
-   characters), and what to do instead. */
+   characters), and what to do instead. On Cantonese worksheets it also says the stroke order is mainland China's
+   standard: no openly licensed Hong Kong stroke data exists, and Hong Kong's order differs for some characters. */
 function showStrokeNote(chars) {
   const none = chars.filter((c) => !state.data[c] && Core.isPracticeChar(c, state.lang));
-  const note = $('strokeNote');
-  note.hidden = !none.length;
-  if (!none.length) return;
   const lang = langInfo().name;
-  note.textContent = `No ${lang} stroke order data for ${none.join(' ')}, so ${none.length > 1 ? 'they are' : 'it is'} ` +
-    `shown without stroke order. For the ${lang} order, check your textbook, your teacher or a ${lang} dictionary ` +
-    'that shows stroke order; or turn off Stroke order in Worksheet options to practice writing without it.';
+  const parts = [];
+  if (state.lang === 'yue') {
+    parts.push('Stroke order here follows mainland China\'s standard; Hong Kong\'s differs for some characters, so ' +
+      'check your textbook or teacher where they disagree.');
+  }
+  if (none.length) {
+    parts.push(`No ${lang} stroke order data for ${none.join(' ')}, so ${none.length > 1 ? 'they are' : 'it is'} ` +
+      `shown without stroke order. For the ${lang} order, check your textbook, your teacher or a ${lang} dictionary ` +
+      'that shows stroke order; or turn off Stroke order in Worksheet options to practice writing without it.');
+  }
+  const note = $('strokeNote');
+  note.hidden = !parts.length;
+  note.textContent = parts.join(' ');
 }
 
 // ---------------------------------------------------------------- phone: one row at a time
