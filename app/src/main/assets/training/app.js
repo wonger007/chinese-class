@@ -163,17 +163,16 @@ function fetchRaw(ch, set = 'zh') {
   });
 }
 
-/* A character's stroke data in the current language. Japanese: only the Japanese data (kanji and kana written the
-   Japanese way, 必), never the Chinese; a character without it has no stroke order. Korean: hangul built from its
-   letters, hanja from the Korean data, then the Chinese data. */
+/* A character's stroke data in the current language, only ever from that language's own data, never another's:
+   Japanese kanji and kana written the Japanese way (必), Korean hangul built from its letters and hanja from the
+   Korean data (only the hanja learned first). A character without it has no stroke order (strokeNote says so). */
 function loadChar(ch) {
   const set = langInfo().strokes;
   const key = set + ch;
   if (!charCache.has(key)) {
-    const chinese = () => fetchRaw(ch).catch(() => Core.compose(ch, fetchRaw));
     const hangul = set === 'ko' && Core.hangulData(ch);
-    const own = hangul ? Promise.resolve(hangul) : set === 'zh' ? chinese() : set === 'ja' ? fetchRaw(ch, 'ja')
-      : fetchRaw(ch, set).catch(chinese);
+    const own = hangul ? Promise.resolve(hangul) : set === 'zh' ? fetchRaw(ch).catch(() => Core.compose(ch, fetchRaw))
+      : fetchRaw(ch, set);
     charCache.set(key, own.catch(() => null));
   }
   return charCache.get(key);
@@ -284,8 +283,22 @@ async function renderPages() {
     redrawInk(p);
   }
   fillWordSelect(table);
+  showStrokeNote(unique);
   selectWord(state.row);
   pages.scrollTop = scrollRatio * pages.scrollHeight;
+}
+
+/* Says which characters on the worksheet have no stroke order data in the language (most Korean hanja; a few rare
+   characters), and what to do instead. */
+function showStrokeNote(chars) {
+  const none = chars.filter((c) => !state.data[c] && Core.isPracticeChar(c, state.lang));
+  const note = $('strokeNote');
+  note.hidden = !none.length;
+  if (!none.length) return;
+  const lang = langInfo().name.split(' ')[1];
+  note.textContent = `No ${lang} stroke order data for ${none.join(' ')}, so ${none.length > 1 ? 'they are' : 'it is'} ` +
+    `shown without stroke order. For the ${lang} order, check your textbook, your teacher or a ${lang} dictionary ` +
+    'that shows stroke order; or turn off Stroke order in Worksheet options to practice writing without it.';
 }
 
 // ---------------------------------------------------------------- phone: one row at a time

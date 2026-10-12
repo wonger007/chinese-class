@@ -123,7 +123,9 @@ and pinyin/jyutping above characters. Zooming doesn't re-wrap the lines, so trac
   **普通話 Mandarin**, **日本語 Japanese**, **한국어 Korean**), switch between them at the top. Typing kana or hangul
   switches to Japanese or Korean by itself. On a worksheet, the switch also writes each word the way that language
   does (学校 becomes 學校 in Cantonese and 학교 in Korean), with its own stroke order; a word that language's
-  dictionary doesn't have stays as it is.
+  dictionary doesn't have stays as it is. Stroke order only ever comes from the language's own data, never another
+  language's: Korean has stroke order for hangul and for the hanja learned first, so most other hanja (and a few rare
+  characters in other languages) are shown without it, and the worksheet says so.
 
 On a phone, worksheets show one character at a time with big squares.
 

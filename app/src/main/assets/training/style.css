@@ -140,6 +140,7 @@ fieldset.field .check { display: inline-flex; margin-right: 18px; }
 .saved .open span { color: var(--muted); font-size: 22px; letter-spacing: 2px; }
 
 .hint { background: var(--hint-bg); color: var(--hint-text); padding: 8px 16px; font-size: 14px; }
+.stroke-note { background: var(--hint-bg); color: var(--hint-text); padding: 8px 16px; font-size: 14px; border-top: 1px solid var(--line); }
 #pages {
   flex: 1; overflow: auto; padding: 16px;
   touch-action: pan-x pan-y;
@@ -361,7 +362,7 @@ svg.pcell.model { outline-color: var(--brand); outline-width: 3px; }
 @media print {
   @page { size: letter; margin: 0; }
   html, body { background: #fff; height: auto; }
-  #home, .bar, .hint, .modal, .toast { display: none !important; }
+  #home, .bar, .hint, .stroke-note, .modal, .toast { display: none !important; }
   #sheet { display: block !important; height: auto; }
   #pages { overflow: visible; padding: 0; display: block !important; }
   #pages svg.page { display: block !important; }
