@@ -390,6 +390,7 @@ function selectWord(i) {
   $('wordSelect').value = String(state.row);
   $('wordPrev').disabled = state.row === 0;
   $('wordNext').disabled = state.row >= ws.words.length - 1;
+  if ($('wordRemove')) $('wordRemove').disabled = ws.words.length <= 1;
   $('wordStar').textContent = isBookmarked(ws.words[state.row]) ? '★' : '☆';
   $('pages').querySelectorAll('svg.page').forEach((p) => p.classList.toggle('current', Number(p.dataset.page) === state.row));
   $('pages').scrollTop = 0;
@@ -510,6 +511,27 @@ async function addWordsToWorksheet(newWords) {
   toast(`Added ${added.length > 1 ? added.length + ' words' : added[0]}`);
 }
 
+/* Removes the currently viewed word from the active worksheet. */
+async function removeCurrentWordFromWorksheet() {
+  const ws = state.ws;
+  if (!ws || ws.words.length <= 1) {
+    toast('A worksheet must have at least one word');
+    return;
+  }
+  saveInk();
+  const removedWord = ws.words[state.row];
+  const updatedWords = ws.words.filter((_, idx) => idx !== state.row);
+  const updatedChars = [...new Set(updatedWords.join(''))];
+  const origin = ws.origin || { lang: state.lang, words: ws.words, title: ws.title };
+  if (state.lang === origin.lang) {
+    origin.words = origin.words.filter((w) => w !== removedWord);
+  }
+  state.ws = Object.assign({}, ws, { words: updatedWords, chars: updatedChars, origin });
+  state.row = Math.min(state.row, updatedWords.length - 1);
+  await renderPages();
+  toast(`Removed ${removedWord}`);
+}
+
 function setupRowView() {
   $('wordPrev').onclick = () => selectWord(state.row - 1);
   $('wordNext').onclick = () => selectWord(state.row + 1);
@@ -518,6 +540,7 @@ function setupRowView() {
   speedButton($('wordSlow'), () => state.ws.words[state.row]);
   $('wordStar').onclick = () => { $('wordStar').textContent = toggleBookmark(state.ws.words[state.row]) ? '★' : '☆'; };
   $('wordAdd').onclick = openAddWordDialog;
+  $('wordRemove').onclick = removeCurrentWordFromWorksheet;
   $('addWordCancel').onclick = closeAddWordDialog;
   $('addWordConfirm').onclick = confirmAddWord;
   $('addWordInput').addEventListener('input', renderAddWordTranslations);

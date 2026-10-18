@@ -234,7 +234,8 @@ button.icon.quiz-add.sel { opacity: 1; background: var(--sel); border-radius: 50
 /* Word picker above the worksheet */
 .word-bar { display: flex; align-items: center; gap: 4px; padding: 6px 12px; background: var(--card); border-bottom: 1px solid var(--line); }
 .word-bar .nav { font-size: 32px; color: var(--red-text); }
-.word-bar #wordAdd { font-size: 22px; font-weight: 700; color: var(--brand); min-width: 44px; }
+.word-bar #wordAdd, .word-bar #wordRemove { font-size: 22px; font-weight: 700; color: var(--brand); min-width: 44px; }
+.word-bar #wordRemove { color: var(--muted); }
 /* As wide as the word in it (not the whole row), so the buttons beside it have room. */
 .word-bar select {
   flex: 0 1 auto; min-width: 120px; max-width: 320px; min-height: 44px; font-size: 20px; padding: 4px 10px;
