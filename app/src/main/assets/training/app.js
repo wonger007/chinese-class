@@ -249,7 +249,7 @@ function strokeCell(parent, ch, data, step, x, y, size) {
 
 /* One page per word (see Core.wordLayout): stroke order, a row to trace, then blank rows to the bottom. */
 function buildPage(ws, pageIndex, totalPages, table) {
-  const word = ws.words[pageIndex];
+  const word = ws.words[pageIndex] || '';
   const chars = Array.from(word);
   const cellMm = Core.BOX_SIZES[ws.opts.size] || Core.BOX_SIZES.large;
   const layout = Core.wordLayout(chars, chars.map((c) => (state.data[c] ? state.data[c].strokes.length : 0)), ws.opts.strokes, cellMm);
@@ -266,8 +266,8 @@ function buildPage(ws, pageIndex, totalPages, table) {
   const border = { stroke: '#000', 'stroke-width': 0.3 };
   line(root, left, 17, right, 17, border);
   if (ws.opts.name) text(root, left, 15.4, langInfo().nameLabel, { 'font-size': 4.2 });
-  text(root, PAGE_W / 2, 15.2, word, { 'font-size': 7, 'text-anchor': 'middle' });
-  if (ws.opts.roman) text(root, PAGE_W / 2, 21.6, romanOfText(word, table), { 'font-size': 3.8, 'text-anchor': 'middle', class: 'roman' });
+  if (word) text(root, PAGE_W / 2, 15.2, word, { 'font-size': 7, 'text-anchor': 'middle' });
+  if (word && ws.opts.roman) text(root, PAGE_W / 2, 21.6, romanOfText(word, table), { 'font-size': 3.8, 'text-anchor': 'middle', class: 'roman' });
   text(root, right, 15.4, `${pageIndex + 1}/${totalPages}`, { 'font-size': 3.6, 'text-anchor': 'end', class: 'head-latin' });
   if (chars.some((c) => state.data[c] && state.data[c].approx)) {
     text(root, right, 21.6, '≈ stroke order assembled from parts', { 'font-size': 2.6, 'text-anchor': 'end', fill: '#999' });
@@ -324,6 +324,10 @@ async function renderPages() {
    characters), and what to do instead. On Cantonese worksheets it also says the stroke order is mainland China's
    standard: no openly licensed Hong Kong stroke data exists, and Hong Kong's order differs for some characters. */
 function showStrokeNote(chars) {
+  if (!chars.length) {
+    $('strokeNote').hidden = true;
+    return;
+  }
   const none = chars.filter((c) => !state.data[c] && Core.isPracticeChar(c, state.lang));
   const lang = langInfo().name;
   const parts = [];
@@ -354,9 +358,10 @@ async function renderRow() {
   const ws = state.ws;
   const page = Math.max(0, Math.min(state.row, ws.words.length - 1));
   state.row = page;
-  const word = ws.words[page];
+  const word = ws.words[page] || '';
   const len = Array.from(word).length;
   const layout = state.layouts[page];
+  if (!layout) return;
 
   // Each row shows whole copies of the word, with squares sized to the screen: about four across in portrait,
   // more in landscape, and never so big that a row doesn't fit on screen.
@@ -364,7 +369,7 @@ async function renderRow() {
   const gap = 6, avail = window.innerWidth - 40;
   const cellPx = Math.min(layout.cell * PX_PER_MM, window.innerHeight * 0.45, avail);
   const fit = Math.max(1, Math.floor((avail + gap) / (cellPx + gap)));
-  const across = Math.min(layout.cols, Math.max(len, Math.floor(fit / len) * len));
+  const across = Math.min(layout.cols, len ? Math.max(len, Math.floor(fit / len) * len) : fit);
   const cells = $('rowCells');
   cells.innerHTML = '';
   layout.rows.forEach((row, r) => {
@@ -387,11 +392,15 @@ function selectWord(i) {
   const ws = state.ws;
   if (!ws) return;
   state.row = Math.max(0, Math.min(i, ws.words.length - 1));
+  const currentWord = ws.words[state.row] || '';
   $('wordSelect').value = String(state.row);
   $('wordPrev').disabled = state.row === 0;
   $('wordNext').disabled = state.row >= ws.words.length - 1;
   if ($('wordRemove')) $('wordRemove').disabled = ws.words.length <= 1;
-  $('wordStar').textContent = isBookmarked(ws.words[state.row]) ? '★' : '☆';
+  $('wordSay').disabled = !currentWord;
+  $('wordSlow').disabled = !currentWord;
+  $('wordStar').disabled = !currentWord;
+  $('wordStar').textContent = isBookmarked(currentWord) ? '★' : '☆';
   $('pages').querySelectorAll('svg.page').forEach((p) => p.classList.toggle('current', Number(p.dataset.page) === state.row));
   $('pages').scrollTop = 0;
   if (state.view === 'row') renderRow();
@@ -403,7 +412,7 @@ function fillWordSelect(table) {
   state.ws.words.forEach((w, i) => {
     const option = document.createElement('option');
     option.value = String(i);
-    option.textContent = `${w}   ${romanOfText(w, table)}`;
+    option.textContent = w ? `${w}   ${romanOfText(w, table)}` : (state.ws.words.length > 1 ? `Blank page ${i + 1}` : 'Blank page');
     select.appendChild(option);
   });
 }
@@ -490,24 +499,32 @@ async function confirmAddWord() {
 async function addWordsToWorksheet(newWords) {
   const ws = state.ws;
   if (!ws) return;
-  saveInk();
-  const added = newWords.filter((w) => !ws.words.includes(w));
+  const isOnlyBlank = ws.words.length === 1 && !ws.words[0];
+  const currentWords = isOnlyBlank ? [] : ws.words.filter(Boolean);
+  const added = newWords.filter((w) => !currentWords.includes(w));
   if (!added.length) {
     toast('Already on this worksheet');
     return;
   }
-  const updatedWords = ws.words.concat(added);
+  saveInk();
+  const updatedWords = currentWords.length ? currentWords.concat(added) : added;
   const updatedChars = [...new Set(updatedWords.join(''))];
   // Keep origin in sync so language switching includes the newly added words too
-  const origin = ws.origin || { lang: state.lang, words: ws.words, title: ws.title };
+  const origin = ws.origin || { lang: state.lang, words: updatedWords, title: ws.title };
   if (state.lang === origin.lang) {
-    origin.words = origin.words.concat(added);
+    origin.words = (origin.words || []).filter(Boolean).concat(added);
   }
-  state.ws = Object.assign({}, ws, { words: updatedWords, chars: updatedChars, origin });
+  state.ws = Object.assign({}, ws, {
+    words: updatedWords,
+    chars: updatedChars,
+    title: isOnlyBlank ? createWorksheetTitle(updatedWords, updatedChars) : ws.title,
+    origin,
+    blank: false,
+  });
   recordPractised(added);
   await renderPages();
   // Select the first newly added word
-  selectWord(ws.words.length);
+  selectWord(currentWords.length);
   toast(`Added ${added.length > 1 ? added.length + ' words' : added[0]}`);
 }
 
@@ -515,21 +532,38 @@ async function addWordsToWorksheet(newWords) {
 async function removeCurrentWordFromWorksheet() {
   const ws = state.ws;
   if (!ws || ws.words.length <= 1) {
-    toast('A worksheet must have at least one word');
+    toast('A worksheet must have at least one page');
     return;
   }
   saveInk();
   const removedWord = ws.words[state.row];
   const updatedWords = ws.words.filter((_, idx) => idx !== state.row);
-  const updatedChars = [...new Set(updatedWords.join(''))];
+  const updatedChars = [...new Set(updatedWords.filter(Boolean).join(''))];
   const origin = ws.origin || { lang: state.lang, words: ws.words, title: ws.title };
   if (state.lang === origin.lang) {
-    origin.words = origin.words.filter((w) => w !== removedWord);
+    origin.words = origin.words.filter((_, idx) => idx !== state.row);
   }
   state.ws = Object.assign({}, ws, { words: updatedWords, chars: updatedChars, origin });
   state.row = Math.min(state.row, updatedWords.length - 1);
   await renderPages();
-  toast(`Removed ${removedWord}`);
+  toast(removedWord ? `Removed ${removedWord}` : 'Removed blank page');
+}
+
+/* Adds a blank practice page to the active worksheet. */
+async function addBlankPageToWorksheet() {
+  const ws = state.ws;
+  if (!ws) return;
+  saveInk();
+  const updatedWords = ws.words.concat('');
+  const origin = ws.origin || { lang: state.lang, words: ws.words, title: ws.title };
+  if (state.lang === origin.lang) {
+    origin.words = (origin.words || []).concat('');
+  }
+  state.ws = Object.assign({}, ws, { words: updatedWords, origin });
+  closeAddWordDialog();
+  await renderPages();
+  selectWord(updatedWords.length - 1);
+  toast('Added blank page');
 }
 
 function setupRowView() {
@@ -543,6 +577,7 @@ function setupRowView() {
   $('wordRemove').onclick = removeCurrentWordFromWorksheet;
   $('addWordCancel').onclick = closeAddWordDialog;
   $('addWordConfirm').onclick = confirmAddWord;
+  $('addWordBlank').onclick = addBlankPageToWorksheet;
   $('addWordInput').addEventListener('input', renderAddWordTranslations);
   $('addWordInput').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') { e.preventDefault(); confirmAddWord(); }
@@ -587,7 +622,10 @@ let inkTimer = 0;
 
 function inkKey(page) {
   const ws = state.ws;
-  return `ink:${ws.words[page]}|${ws.opts.size}|${ws.opts.strokes ? 's' : '-'}`;
+  const word = ws.words[page];
+  return word
+    ? `ink:${word}|${ws.opts.size}|${ws.opts.strokes ? 's' : '-'}`
+    : `ink:blank:${ws.id || ''}:${page}|${ws.opts.size}`;
 }
 
 function loadInk() {
@@ -874,6 +912,7 @@ function clearScreen() {
 
 /* Reads text aloud in the chosen language, at the chosen speed unless [rate] is given (below 1 is slower). */
 function speak(textToSay, rate = state.speed) {
+  if (!textToSay) return;
   if (Native && Native.speakAt) {
     Native.speakAt(textToSay, state.lang, rate);
   } else if (Native && Native.speak) {
@@ -1260,6 +1299,13 @@ async function switchSheetLang(lang) {
   const ws = state.ws;
   if (!ws || !ws.words.length) return setLang(lang);
   const origin = ws.origin || { lang: state.lang, words: ws.words, title: ws.title };
+  if (origin.words.every((w) => !w)) {
+    saveInk();
+    state.ws = Object.assign({}, ws, { origin: Object.assign({}, origin, { lang }) });
+    loadInk();
+    setLang(lang);
+    return;
+  }
   let words = origin.words;
   let missing = [];
   if (lang !== origin.lang) {
@@ -1656,6 +1702,10 @@ function setupOptions() {
 function setupHome() {
   $('homeBack').onclick = () => { if (Native && Native.close) Native.close(); };
   setupOptions();
+  $('blankWsBtn').onclick = async () => {
+    const ws = createBlankWorksheet(formOpts());
+    await openSheet(ws);
+  };
   $('newForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     useScriptLang($('fChars').value);
@@ -1666,7 +1716,7 @@ function setupHome() {
     if (!words.length) {
       err.textContent = typed.length ? `That isn't ${langInfo().name}: type ${langInfo().name} characters or words, or English.`
         : Core.englishPhrases($('fChars').value).length
-          ? 'Tap a word above to use it.' : 'Type at least one character, word or English word.';
+          ? 'Tap a word above to use it.' : 'Type at least one character, word or English word, or tap Blank worksheet.';
       err.hidden = false;
       return;
     }
@@ -1677,6 +1727,19 @@ function setupHome() {
     await openSheet(ws);
     leftOutNote(typed.length - words.length);
   });
+}
+
+/* Creates a blank practice worksheet (empty grid cells with name label and chosen guides). */
+function createBlankWorksheet(opts = formOpts()) {
+  store.set('lastOpts', opts);
+  return {
+    id: Date.now().toString(36),
+    title: 'Blank worksheet',
+    chars: [],
+    words: [''],
+    opts,
+    blank: true,
+  };
 }
 
 /* A worksheet for the given characters. Only its words (in History), its options (as defaults) and the writing on each
@@ -2484,7 +2547,7 @@ async function openSheet(ws) {
   $('sheet').hidden = false;
   $('sheetTitle').textContent = ws.title;
   $('pages').scrollTop = 0;
-  recordPractised(ws.words && ws.words.length ? ws.words : ws.chars);
+  recordPractised((ws.words && ws.words.length ? ws.words : ws.chars).filter(Boolean));
   await renderPages();
 }
 

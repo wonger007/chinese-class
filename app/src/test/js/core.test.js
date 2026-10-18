@@ -197,6 +197,21 @@ test('worksheet: one page per word, stroke order rows, then trace, then blank ro
 
   const long = Core.wordLayout(Array.from('龘龘龘龘龘龘'), Array(6).fill(48), true);
   assert.ok(long.rows.some((r) => r.kind === 'trace'), 'very long words still get a trace row');
+
+  const blankLarge = Core.wordLayout([], [], false, Core.BOX_SIZES.large);
+  assert.strictEqual(blankLarge.cols, 7, 'large blank worksheet has 7 columns');
+  assert.strictEqual(blankLarge.rows.length, 9, 'large blank worksheet has 9 rows');
+  assert.ok(blankLarge.rows.every((r) => r.kind === 'blank'), 'large blank worksheet is all blank rows');
+
+  const blankMed = Core.wordLayout([], [], true, Core.BOX_SIZES.medium);
+  assert.strictEqual(blankMed.cols, 9, 'medium blank worksheet has 9 columns');
+  assert.strictEqual(blankMed.rows.length, 12, 'medium blank worksheet has 12 rows');
+  assert.ok(blankMed.rows.every((r) => r.kind === 'blank'), 'medium blank worksheet is all blank rows');
+
+  const blankSmall = Core.wordLayout([], [], false, Core.BOX_SIZES.small);
+  assert.strictEqual(blankSmall.cols, 11, 'small blank worksheet has 11 columns');
+  assert.strictEqual(blankSmall.rows.length, 14, 'small blank worksheet has 14 rows');
+  assert.ok(blankSmall.rows.every((r) => r.kind === 'blank'), 'small blank worksheet is all blank rows');
 });
 
 test('practice words: runs of Chinese, no repeats, long runs split', () => {

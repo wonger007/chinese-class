@@ -82,7 +82,10 @@
         </div>
       </div>
 
-      <button type="submit" class="primary">Create worksheet</button>
+      <div class="form-buttons">
+        <button type="submit" class="primary">Create worksheet</button>
+        <button type="button" id="blankWsBtn">Blank worksheet</button>
+      </div>
       <p id="formError" class="error" hidden></p>
       <!-- Kept from the last worksheet; folded away so the button above is easy to find. -->
       <details id="wsOptions" class="options">
@@ -283,6 +286,7 @@
     <p id="addWordError" class="error" hidden></p>
     <div class="practice-buttons">
       <button type="button" class="primary" id="addWordConfirm">Add word</button>
+      <button type="button" class="plain" id="addWordBlank">Add blank page</button>
       <button type="button" class="plain" id="addWordCancel">Cancel</button>
     </div>
   </div>

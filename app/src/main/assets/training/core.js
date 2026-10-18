@@ -581,26 +581,28 @@
   function wordLayout(chars, strokeCounts, showStrokes, cell = PAGE.CELL) {
     const maxCols = Math.min(PAGE.MAX_COLS, Math.floor((PAGE.W - 2 * PAGE.SIDE) / cell));
     const len = Math.min(chars.length, maxCols);
-    const cols = Math.max(len, Math.floor(maxCols / len) * len);
+    const cols = len > 0 ? Math.max(len, Math.floor(maxCols / len) * len) : maxCols;
     const totalRows = Math.floor((PAGE.H - PAGE.TOP - PAGE.BOTTOM) / cell);
     const rows = [];
-    if (showStrokes) {
-      const seen = new Set();
-      chars.forEach((ch, i) => {
-        if (seen.has(ch)) return;
-        seen.add(ch);
-        const n = strokeCounts[i] || 0;
-        const steps = n > 0 ? Array.from({ length: n }, (_, k) => k + 1) : [0];
-        for (let s = 0; s < steps.length; s += cols) {
-          rows.push({ kind: 'strokes', cells: steps.slice(s, s + cols).map((step) => ({ ch, step })) });
-        }
-      });
-      // Very long words: keep at least the trace row and one blank row on the page.
-      rows.splice(Math.max(1, totalRows - 2));
-    } else {
-      rows.push({ kind: 'model' });
+    if (len > 0) {
+      if (showStrokes) {
+        const seen = new Set();
+        chars.forEach((ch, i) => {
+          if (seen.has(ch)) return;
+          seen.add(ch);
+          const n = strokeCounts[i] || 0;
+          const steps = n > 0 ? Array.from({ length: n }, (_, k) => k + 1) : [0];
+          for (let s = 0; s < steps.length; s += cols) {
+            rows.push({ kind: 'strokes', cells: steps.slice(s, s + cols).map((step) => ({ ch, step })) });
+          }
+        });
+        // Very long words: keep at least the trace row and one blank row on the page.
+        rows.splice(Math.max(1, totalRows - 2));
+      } else {
+        rows.push({ kind: 'model' });
+      }
+      rows.push({ kind: 'trace' });
     }
-    rows.push({ kind: 'trace' });
     while (rows.length < totalRows) rows.push({ kind: 'blank' });
     return { cols, left: (PAGE.W - cols * cell) / 2, top: PAGE.TOP, cell, rows };
   }
