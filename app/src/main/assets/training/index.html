@@ -292,6 +292,29 @@
   </div>
 </div>
 
+<!-- Blank worksheet: choose size and grid guides before opening -->
+<div id="blankWsDialog" class="modal" hidden>
+  <div class="modal-card small-card">
+    <h2>Blank worksheet</h2>
+    <fieldset class="field">
+      <legend>Grid size</legend>
+      <label class="check"><input type="radio" name="blankSize" value="large" checked> Large grid (default — 27 mm)</label>
+      <label class="check"><input type="radio" name="blankSize" value="medium"> Smaller grid (Medium — 20 mm)</label>
+      <label class="check"><input type="radio" name="blankSize" value="small"> Small grid (17 mm)</label>
+    </fieldset>
+    <fieldset class="field">
+      <legend>Square guide lines</legend>
+      <label class="check"><input type="radio" name="blankGrid" value="mi" checked> Diagonal guides</label>
+      <label class="check"><input type="radio" name="blankGrid" value="tian"> Cross guides</label>
+      <label class="check"><input type="radio" name="blankGrid" value="none"> No grid (plain squares)</label>
+    </fieldset>
+    <div class="practice-buttons">
+      <button type="button" class="primary" id="blankWsConfirm">Create blank worksheet</button>
+      <button type="button" class="plain" id="blankWsCancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <!-- Export: print, or share a PDF with another app -->
 <div id="printDialog" class="modal" hidden>
   <div class="modal-card small-card">
@@ -324,6 +347,8 @@
   <!-- Phones: the stylus / finger toggle lives here, as the title bar is full. -->
   <button id="fingerBtn" role="menuitem" hidden>☝ Finger</button>
   <button id="viewBtn" role="menuitem">📄 Whole pages</button>
+  <button class="keep-open" id="gridSizeBtn" role="menuitem">📏 Grid: Large</button>
+  <button class="keep-open" id="gridGuidesBtn" role="menuitem">▦ Guides: Diagonal</button>
   <button class="page-only keep-open" id="zoomIn" role="menuitem">＋ Zoom in</button>
   <button class="page-only keep-open" id="zoomOut" role="menuitem">－ Zoom out</button>
   <button class="native-only" id="aboutBtn2" role="menuitem">ℹ About Hok6</button>

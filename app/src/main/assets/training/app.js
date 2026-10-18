@@ -317,6 +317,7 @@ async function renderPages() {
   fillWordSelect(table);
   showStrokeNote(unique);
   selectWord(state.row);
+  updateGridMenuButtons();
   pages.scrollTop = scrollRatio * pages.scrollHeight;
 }
 
@@ -1699,13 +1700,32 @@ function setupOptions() {
   showOptSummary();
 }
 
+function openBlankWsDialog() {
+  const o = Object.assign({}, DEFAULT_OPTS, store.get('lastOpts', {}));
+  document.querySelectorAll('input[name=blankSize]').forEach((r) => { r.checked = r.value === (o.size || 'large'); });
+  document.querySelectorAll('input[name=blankGrid]').forEach((r) => { r.checked = r.value === (o.grid || 'mi'); });
+  $('blankWsDialog').hidden = false;
+}
+
+function closeBlankWsDialog() {
+  $('blankWsDialog').hidden = true;
+}
+
+async function confirmBlankWs() {
+  const size = (document.querySelector('input[name=blankSize]:checked') || { value: 'large' }).value;
+  const grid = (document.querySelector('input[name=blankGrid]:checked') || { value: 'mi' }).value;
+  const opts = Object.assign({}, formOpts(), { size, grid });
+  closeBlankWsDialog();
+  const ws = createBlankWorksheet(opts);
+  await openSheet(ws);
+}
+
 function setupHome() {
   $('homeBack').onclick = () => { if (Native && Native.close) Native.close(); };
   setupOptions();
-  $('blankWsBtn').onclick = async () => {
-    const ws = createBlankWorksheet(formOpts());
-    await openSheet(ws);
-  };
+  $('blankWsBtn').onclick = openBlankWsDialog;
+  $('blankWsCancel').onclick = closeBlankWsDialog;
+  $('blankWsConfirm').onclick = confirmBlankWs;
   $('newForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     useScriptLang($('fChars').value);
@@ -2634,11 +2654,41 @@ function setupSheet() {
   $('clearBtn').onclick = clearScreen;
   $('fingerBtn').onclick = () => setFingerDraw(!state.fingerDraw, true);
   $('modeBtn').onclick = () => setFingerDraw(!state.fingerDraw, true);
+  $('gridSizeBtn').onclick = async () => {
+    if (!state.ws) return;
+    const nextSize = { large: 'medium', medium: 'small', small: 'large' }[state.ws.opts.size] || 'large';
+    saveInk();
+    state.ws.opts.size = nextSize;
+    store.set('lastOpts', state.ws.opts);
+    updateGridMenuButtons();
+    await renderPages();
+    const label = { large: 'Large (27 mm)', medium: 'Smaller (20 mm)', small: 'Small (17 mm)' }[nextSize];
+    toast(`Grid size: ${label}`);
+  };
+  $('gridGuidesBtn').onclick = async () => {
+    if (!state.ws) return;
+    const nextGrid = { mi: 'tian', tian: 'none', none: 'mi' }[state.ws.opts.grid] || 'mi';
+    saveInk();
+    state.ws.opts.grid = nextGrid;
+    store.set('lastOpts', state.ws.opts);
+    updateGridMenuButtons();
+    await renderPages();
+    const label = { mi: 'Diagonal guides', tian: 'Cross guides', none: 'No grid' }[nextGrid];
+    toast(`Guides: ${label}`);
+  };
   $('zoomIn').onclick = () => setZoom(state.zoom * 1.25);
   $('zoomOut').onclick = () => setZoom(state.zoom / 1.25);
   setFingerDraw(state.fingerDraw, false);
   setZoom(state.zoom);
   updateTools();
+}
+
+function updateGridMenuButtons() {
+  if (!state.ws) return;
+  const sizeNames = { large: 'Large (27 mm)', medium: 'Smaller (20 mm)', small: 'Small (17 mm)' };
+  const gridNames = { mi: 'Diagonal', tian: 'Cross', none: 'No grid' };
+  if ($('gridSizeBtn')) $('gridSizeBtn').textContent = '📏 Grid: ' + (sizeNames[state.ws.opts.size] || 'Large');
+  if ($('gridGuidesBtn')) $('gridGuidesBtn').textContent = '▦ Guides: ' + (gridNames[state.ws.opts.grid] || 'Diagonal');
 }
 
 // Android back button: returns true when handled here.
@@ -2651,6 +2701,7 @@ window.handleBack = function handleBack() {
   if (!$('quizView').hidden) { closeQuiz(); return true; }
   if (!$('printDialog').hidden) { $('printDialog').hidden = true; return true; }
   if (!$('addWordDialog').hidden) { closeAddWordDialog(); return true; }
+  if (!$('blankWsDialog').hidden) { closeBlankWsDialog(); return true; }
   if (!$('sheet').hidden) {
     if (state.autoStarted) { saveInk(); return false; }
     closeSheet();
