@@ -188,6 +188,7 @@
     <button class="icon nav" id="wordPrev" aria-label="Previous word">‹</button>
     <select id="wordSelect" aria-label="Word to practice"></select>
     <button class="icon nav" id="wordNext" aria-label="Next word">›</button>
+    <button class="icon" id="wordAdd" aria-label="Add a word" title="Add a word to this worksheet">＋</button>
     <button class="icon" id="wordSay" aria-label="Say the word">🔊</button>
     <button class="icon speed" id="wordSlow" aria-label="Speaking speed">1×</button>
     <button class="icon star" id="wordStar" aria-label="Bookmark this word">☆</button>
@@ -266,6 +267,23 @@
       <button id="pRadical" aria-pressed="false">Radical</button>
     </div>
     <div id="pStrip" class="strip"></div>
+  </div>
+</div>
+
+<!-- Add word: add another word or character to the current worksheet -->
+<div id="addWordDialog" class="modal" hidden>
+  <div class="modal-card small-card">
+    <h2>Add to worksheet</h2>
+    <p class="muted">Type another <span class="langName">Cantonese</span> word or English word to add to this worksheet:</p>
+    <div class="field">
+      <input type="text" id="addWordInput" placeholder="Word or character, or English..." autocomplete="off">
+    </div>
+    <div id="addWordResults" class="tr-box" hidden></div>
+    <p id="addWordError" class="error" hidden></p>
+    <div class="practice-buttons">
+      <button type="button" class="primary" id="addWordConfirm">Add word</button>
+      <button type="button" class="plain" id="addWordCancel">Cancel</button>
+    </div>
   </div>
 </div>
 

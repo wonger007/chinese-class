@@ -415,6 +415,101 @@ function setView(view) {
   if (view === 'row' && state.ws) renderRow();
 }
 
+function openAddWordDialog() {
+  const dlg = $('addWordDialog');
+  $('addWordInput').value = '';
+  $('addWordResults').innerHTML = '';
+  $('addWordResults').hidden = true;
+  $('addWordError').hidden = true;
+  dlg.hidden = false;
+  setTimeout(() => $('addWordInput').focus(), 50);
+}
+
+function closeAddWordDialog() {
+  $('addWordDialog').hidden = true;
+}
+
+let addWordTranslateTimer = 0;
+function renderAddWordTranslations() {
+  clearTimeout(addWordTranslateTimer);
+  addWordTranslateTimer = setTimeout(async () => {
+    const input = $('addWordInput').value.trim();
+    const box = $('addWordResults');
+    const phrases = Core.englishPhrases(input);
+    if (!phrases.length) { box.innerHTML = ''; box.hidden = true; return; }
+    const results = await Promise.all(phrases.map((p) => searchEnglish(p, state.lang)));
+    const all = results.flat();
+    if (!all.length) { box.innerHTML = ''; box.hidden = true; return; }
+    const table = await loadReadings(all.map((e) => e[0] + (e[1] || '')).join(''));
+    box.innerHTML = '';
+    box.hidden = false;
+    all.slice(0, 6).forEach((e) => {
+      const word = Core.entryWord(e, state.lang);
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'tr-chip';
+      chip.lang = Core.LANGS[state.lang].html;
+      chip.innerHTML = '<span class="tr-word"></span><span class="tr-roman"></span><span class="tr-gloss"></span>';
+      chip.querySelector('.tr-word').textContent = word;
+      chip.querySelector('.tr-roman').textContent = chipReading(e, state.lang, table);
+      chip.querySelector('.tr-gloss').textContent = e[4] || '';
+      chip.onclick = () => {
+        $('addWordInput').value = word;
+        box.hidden = true;
+        confirmAddWord();
+      };
+      box.appendChild(chip);
+    });
+  }, 250);
+}
+
+async function confirmAddWord() {
+  const raw = $('addWordInput').value.trim();
+  const err = $('addWordError');
+  if (!raw) {
+    err.textContent = 'Type a word or character to add.';
+    err.hidden = false;
+    return;
+  }
+  const typed = Core.practiceWords(raw, state.lang);
+  const words = await ownWords(typed);
+  if (!words.length) {
+    const phrases = Core.englishPhrases(raw);
+    err.textContent = typed.length ? `That isn't ${langInfo().name}: type ${langInfo().name} characters or words.`
+      : phrases.length ? 'Tap a suggestion above to use it.' : 'Type at least one word in this language.';
+    err.hidden = false;
+    return;
+  }
+  err.hidden = true;
+  closeAddWordDialog();
+  await addWordsToWorksheet(words);
+}
+
+/* Adds words to the active worksheet, updating origin, UI, and re-rendering pages. */
+async function addWordsToWorksheet(newWords) {
+  const ws = state.ws;
+  if (!ws) return;
+  saveInk();
+  const added = newWords.filter((w) => !ws.words.includes(w));
+  if (!added.length) {
+    toast('Already on this worksheet');
+    return;
+  }
+  const updatedWords = ws.words.concat(added);
+  const updatedChars = [...new Set(updatedWords.join(''))];
+  // Keep origin in sync so language switching includes the newly added words too
+  const origin = ws.origin || { lang: state.lang, words: ws.words, title: ws.title };
+  if (state.lang === origin.lang) {
+    origin.words = origin.words.concat(added);
+  }
+  state.ws = Object.assign({}, ws, { words: updatedWords, chars: updatedChars, origin });
+  recordPractised(added);
+  await renderPages();
+  // Select the first newly added word
+  selectWord(ws.words.length);
+  toast(`Added ${added.length > 1 ? added.length + ' words' : added[0]}`);
+}
+
 function setupRowView() {
   $('wordPrev').onclick = () => selectWord(state.row - 1);
   $('wordNext').onclick = () => selectWord(state.row + 1);
@@ -422,6 +517,13 @@ function setupRowView() {
   $('wordSay').onclick = () => speak(state.ws.words[state.row]);
   speedButton($('wordSlow'), () => state.ws.words[state.row]);
   $('wordStar').onclick = () => { $('wordStar').textContent = toggleBookmark(state.ws.words[state.row]) ? '★' : '☆'; };
+  $('wordAdd').onclick = openAddWordDialog;
+  $('addWordCancel').onclick = closeAddWordDialog;
+  $('addWordConfirm').onclick = confirmAddWord;
+  $('addWordInput').addEventListener('input', renderAddWordTranslations);
+  $('addWordInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); confirmAddWord(); }
+  });
   $('viewBtn').onclick = () => setView(state.view === 'row' ? 'page' : 'row');
   $('viewBtn').hidden = !IS_PHONE;
   document.body.classList.toggle('phone', IS_PHONE);
@@ -2462,6 +2564,7 @@ window.handleBack = function handleBack() {
   if (!$('practice').hidden) { closePractice(); return true; }
   if (!$('quizView').hidden) { closeQuiz(); return true; }
   if (!$('printDialog').hidden) { $('printDialog').hidden = true; return true; }
+  if (!$('addWordDialog').hidden) { closeAddWordDialog(); return true; }
   if (!$('sheet').hidden) {
     if (state.autoStarted) { saveInk(); return false; }
     closeSheet();
